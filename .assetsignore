@@ -1,0 +1,22 @@
+# Files in the repo root that should NOT be uploaded as deployed static assets.
+# Cloudflare Workers/Pages reads this (gitignore syntax) when publishing assets.
+# Without it, the build's node_modules/ (incl. a 119 MiB workerd binary) gets
+# swept in and trips the 25 MiB per-asset limit.
+
+node_modules
+.git
+.gitignore
+.wrangler
+.github
+*.log
+
+# Build tooling & source — not needed by the deployed static site
+data
+generate-data.mjs
+make-og-image.mjs
+og-image.svg
+package.json
+package-lock.json
+README.md
+LICENSE
+.assetsignore
