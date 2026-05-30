@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symbols Profile — Stream Deck Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0c0d10;
+    --bg-1:#15161b;
+    --key-top:#2b2d36;
+    --key-bot:#191b21;
+    --key-edge:#3a3d48;
+    --ink:#f2efe6;
+    --ink-dim:#9a9ba6;
+    --ink-faint:#5d5f6b;
+    --amber:#e9b04a;
+    --amber-soft:#caa15a;
+    --line:#26282f;
+    --good:#7fb986;
+    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --glyph:"Apple Symbols","Segoe UI Symbol","Noto Sans Symbols2","Noto Sans Symbols","Symbola","DejaVu Sans",sans-serif;
+    --emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1200px 600px at 70% -10%, #1d1f27 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, #181a22 0%, transparent 55%),
+      var(--bg-0);
+    color:var(--ink);
+    font-family:var(--mono);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding:30px 22px 70px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:6px}
+  .title-block h1{
+    font-family:"Fraunces",serif;
+    font-weight:600;
+    font-size:clamp(30px,5vw,52px);
+    line-height:.95;
+    letter-spacing:-.01em;
+  }
+  .title-block h1 .e{color:var(--amber);font-style:italic}
+  .title-block p{
+    color:var(--ink-dim);font-size:12px;margin-top:10px;max-width:540px;line-height:1.6;letter-spacing:.02em
+  }
+  .crumbs{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-faint);letter-spacing:.12em;text-transform:uppercase;margin:26px 2px 16px}
+  .crumbs b{color:var(--amber-soft);font-weight:500}
+  .crumbs .sep{opacity:.5}
+
+  .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
+  .search{
+    position:relative;flex:1;min-width:220px;max-width:420px
+  }
+  .search input{
+    width:100%;background:var(--bg-1);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--mono);font-size:13px;padding:12px 14px 12px 38px;border-radius:11px;outline:none;
+    transition:border-color .15s,box-shadow .15s;letter-spacing:.02em
+  }
+  .search input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(233,176,74,.12)}
+  .search input::placeholder{color:var(--ink-faint)}
+  .search .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-family:var(--glyph)}
+  .pill{
+    font-size:11px;color:var(--ink-dim);letter-spacing:.06em;border:1px solid var(--line);
+    padding:9px 13px;border-radius:11px;background:var(--bg-1);white-space:nowrap
+  }
+  .pill b{color:var(--amber-soft)}
+
+  /* grids */
+  .grid{
+    display:grid;gap:13px;margin-top:22px;
+    grid-template-columns:repeat(8,1fr);
+  }
+  @media(max-width:980px){.grid{grid-template-columns:repeat(6,1fr)}}
+  @media(max-width:720px){.grid{grid-template-columns:repeat(5,1fr)}}
+  @media(max-width:520px){.grid{grid-template-columns:repeat(4,1fr)}}
+
+  .key{
+    position:relative;aspect-ratio:1/1;border:none;cursor:pointer;border-radius:14px;
+    background:linear-gradient(180deg,var(--key-top),var(--key-bot));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.07),
+      inset 0 -2px 5px rgba(0,0,0,.5),
+      0 6px 14px rgba(0,0,0,.4);
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    transition:transform .12s ease,box-shadow .12s ease,outline-color .12s;
+    outline:1px solid transparent;overflow:hidden;
+    padding:6px;
+  }
+  .key:hover{transform:translateY(-2px);outline-color:rgba(233,176,74,.55);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -2px 5px rgba(0,0,0,.5),0 10px 22px rgba(0,0,0,.5),0 0 0 3px rgba(233,176,74,.08)}
+  .key:active{transform:translateY(1px) scale(.985);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.6),0 3px 8px rgba(0,0,0,.4)}
+  .key.copied{outline-color:var(--good);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 0 0 3px rgba(127,185,134,.25),0 10px 22px rgba(0,0,0,.5)}
+
+  /* symbol key */
+  .key .gly{font-family:var(--glyph);font-size:clamp(22px,3.4vw,32px);line-height:1;color:var(--ink)}
+  .key.is-emoji .gly{font-family:var(--emoji)}
+
+  /* folder key */
+  .key.folder{justify-content:space-between;align-items:stretch;padding:11px 11px 9px}
+  .key.folder .fg{flex:1;display:flex;align-items:center;justify-content:center;font-family:var(--glyph);font-size:clamp(20px,3vw,30px);color:var(--amber-soft)}
+  .key.folder.is-emoji .fg{font-family:var(--emoji);color:var(--ink)}
+  .key.folder .lbl{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-dim);text-align:center;line-height:1.25;font-weight:500}
+  .key.folder .cnt{position:absolute;top:7px;right:9px;font-size:8.5px;color:var(--ink-faint);letter-spacing:.04em}
+  .key.folder::after{content:"";position:absolute;top:8px;left:9px;width:13px;height:10px;border:1.5px solid var(--ink-faint);border-radius:2px 3px 2px 2px;opacity:.5}
+  .key.folder.useful::after{border-color:var(--amber)}
+  .key.folder.useful .fg{color:var(--amber)}
+
+  /* back key */
+  .key.back .gly{color:var(--amber)}
+
+  /* header bar inside category */
+  .catbar{display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap}
+  .btn-back{
+    font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink);
+    background:var(--bg-1);border:1px solid var(--line);padding:10px 15px;border-radius:11px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;transition:border-color .15s,color .15s
+  }
+  .btn-back:hover{border-color:var(--amber);color:var(--amber)}
+  .btn-back .a{font-family:var(--glyph)}
+  .cat-title{font-family:"Fraunces",serif;font-size:clamp(22px,3.5vw,32px);font-weight:600}
+  .cat-sub{font-size:11px;color:var(--ink-faint);letter-spacing:.05em;margin-left:auto}
+
+  .pager{display:flex;align-items:center;gap:10px;margin:22px 0 0}
+  .pager button{
+    background:var(--bg-1);border:1px solid var(--line);color:var(--ink);font-family:var(--mono);
+    width:38px;height:38px;border-radius:10px;cursor:pointer;font-family:var(--glyph);font-size:16px;transition:border-color .15s,color .15s,opacity .15s
+  }
+  .pager button:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+  .pager button:disabled{opacity:.3;cursor:default}
+  .dots{display:flex;gap:7px;align-items:center}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint);opacity:.45;transition:.2s;cursor:pointer}
+  .dot.on{background:var(--amber);opacity:1;transform:scale(1.25)}
+  .pager .pinfo{font-size:11px;color:var(--ink-dim);letter-spacing:.06em;margin-left:4px}
+
+  .empty{color:var(--ink-faint);font-size:13px;padding:40px 4px;letter-spacing:.03em}
+
+  /* toast */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:#101116;border:1px solid var(--line);color:var(--ink);padding:12px 18px;border-radius:12px;
+    font-size:13px;letter-spacing:.02em;box-shadow:0 10px 30px rgba(0,0,0,.6);transition:opacity .2s,transform .2s;z-index:50;
+    display:flex;align-items:center;gap:11px
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast .big{font-family:var(--glyph);font-size:22px;color:var(--amber)}
+  .toast .big.is-emoji{font-family:var(--emoji);color:inherit}
+  .toast b{color:var(--good);font-weight:500}
+
+  footer{margin-top:40px;border-top:1px solid var(--line);padding-top:20px;color:var(--ink-faint);font-size:11px;line-height:1.7;letter-spacing:.02em}
+  footer b{color:var(--ink-dim);font-weight:500}
+  footer .amk{color:var(--amber-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <h1>Symbols <span class="e">Profile</span></h1>
+      <p>Tap a folder, page through the keys, click any glyph to copy it, then paste into the Stream Deck button's Text action. Pages are sized to 30 keys so one page here maps to one folder page on the XL (2 keys left for Back + Next).</p>
+    </div>
+    <div class="toolbar">
+      <div class="search">
+        <span class="ic">⌕</span>
+        <input id="search" type="text" placeholder="search all symbols by name…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="pill">XL · <b>8×4</b></div>
+    </div>
+  </header>
+
+  <div class="crumbs" id="crumbs"></div>
+  <div id="stage"></div>
+
+  <footer>
+    <b>Setup, fast version.</b> For each key: drop the <span class="amk">System ▸ Text</span> action on it, paste the symbol into the text field, and set the key title (or icon) to the same glyph so you can read it at a glance.
+    Reserve the bottom-left key of every folder for <span class="amk">Create Folder ▸ back</span> and the bottom-right for the next page.
+    Emoji and some music/astro glyphs are color or multi-codepoint; they type fine but may show monochrome on the device face, so a clear title helps.
+    <br><b style="display:inline-block;margin-top:8px">Note.</b> The full Unicode set is ~150k characters, so this is the genuinely useful slice for design, dev, writing, and your chart work, not every codepoint in existence.
+  </footer>
+</div>
+
+<div class="toast" id="toast"><span class="big" id="toastGly"></span><span><b>copied</b> <span id="toastTxt"></span></span></div>
+
+<script>
+/* ---------- DATA ---------- */
+const S = (arr)=>arr; // identity, readability
+
+const CATS = [
+  { id:"useful", label:"Most Useful", glyph:"★", useful:true, items:
+    S(["→","←","↑","↓","•","…","–","—","“","”","‘","’","©","®","™","°","×","÷","±","≈","≠","✓","✗","★","§","¶","†","‡","⌘","⌥","⇧","↩","€"]) },
+
+  { id:"arrows", label:"Arrows", glyph:"→", items:
+    S(["←","→","↑","↓","↔","↕","↖","↗","↘","↙","⇐","⇒","⇑","⇓","⇔","⇕","⇖","⇗","⇘","⇙","⟵","⟶","⟷","⟸","⟹","⟺","⬅","➡","⬆","⬇",
+       "↩","↪","↰","↱","↲","↳","↴","↵","⤴","⤵","⤶","⤷","↺","↻","⟲","⟳","⮌","⮍","⮎","⮏","↶","↷","⤺","⤻","⥀","⥁","⟰","⟱","⇈","⇊",
+       "➔","➜","➝","➞","➟","➠","➢","➣","➤","➥","➦","➨","➩","➪","➫","➬","➭","➮","➯","➱","➲","➳","➵","➸","➺","➻","➼","➽","➾","⮕",
+       "⇄","⇆","⇅","⇵","⇶","⇌","⇋","⇇","⇉","⥆","⮐","⮑","⮒","⮓","⤽","⤼","↞","↠","↟","↡","⇜","⇝","↜","↝","⇠","⇢","⇡","⇣","⤒","⤓"]) },
+
+  { id:"math", label:"Math + Logic", glyph:"∑", items:
+    S(["+","−","×","÷","±","∓","⋅","∗","=","≠","≈","≅","≡","≢","≤","≥","≪","≫","∝","∞","∑","∏","∫","∬","∮","√","∛","∜","∂","∇",
+       "∆","∅","∈","∉","∋","⊂","⊃","⊆","⊇","⊄","⊅","∪","∩","∀","∃","∄","∧","∨","¬","⊕","⊗","⊙","⊥","∥","∠","∟","⊿","∴","∵","≜",
+       "≝","≐","⌀","%","‰","‱","°","′","″","‴","ℝ","ℤ","ℕ","ℚ","ℂ","ℵ","∁","∢","∣","∤","≃","≄","≦","≧","⋘","⋙","≺","≻","⊰","⊱"]) },
+
+  { id:"currency", label:"Currency", glyph:"€", items:
+    S(["$","¢","£","¥","€","₹","₽","₩","₪","₫","₴","₦","₱","฿","₲","₵","₸","₺","₼","₾","₿","¤","ƒ","₧","₠","₡","₣","₤","₥","₯"]) },
+
+  { id:"punct", label:"Typography", glyph:"¶", items:
+    S(["…","‚","„","“","”","‘","’","‹","›","«","»","¡","¿","§","¶","†","‡","•","·","‐","‑","‒","–","—","―","‖","⁂","※","‼","⁇",
+       "⁈","⁉","⸮","⌜","⌝","⌞","⌟","⁓","＠","＃","＆","⹀","¦","‟","❛","❜","❝","❞","〝","〞","‛","⸢","⸣","⹂","⸚","⸺","⸻","⹅","⹆","⸙"]) },
+
+  { id:"marks", label:"Marks", glyph:"©", items:
+    S(["©","®","™","℠","℗","ª","º","№","℅","℆","⅍","℞","℟","℄","℀","℁","‰","‱","µ","°","′","″","§","¶","†","‡","¤","℮","℔","℥"]) },
+
+  { id:"geo", label:"Shapes", glyph:"◆", items:
+    S(["■","□","▪","▫","◼","◻","◾","◽","▰","▱","▮","▯","●","○","◯","⬤","⚫","⚪","◉","◎","◐","◑","◒","◓","◔","◕","◖","◗","◍","◌",
+       "⬮","⬯","▲","△","▴","▵","▶","▷","▸","▹","►","▻","▼","▽","▾","▿","◀","◁","◂","◃","◄","◅","◆","◇","◈","◊","⬥","⬦","⬧","⬨",
+       "⬩","⬢","⬡","⬟","⯁","⯂","⯃","⯄","⏢","⌬","⎔","⧫","◢","◣","◤","◥","▱","⬭","⬬","⬫","⬪","⫧","⫨","⎕","⌗","⌸","⌹","⌺","⌻","⌼"]) },
+
+  { id:"stars", label:"Stars", glyph:"✦", items:
+    S(["★","☆","✪","✯","✩","✫","✬","✭","✮","✰","⭐","✦","✧","⋆","∗","✱","✲","✳","✴","✵","✶","✷","✸","✹","✺","❋","❊","❉","❈","❇",
+       "❅","❆","✻","✼","❄","꙰","⍟","⊛","✠","✢","✣","✤","✥","❂","✿","❀","❁","✾","✽","❃"]) },
+
+  { id:"bullets", label:"Bullets", glyph:"•", items:
+    S(["•","◦","‣","⁃","∙","·","●","○","◘","◙","⦿","⦾","▪","▫","◆","◇","■","□","▶","▷","►","▻","◉","⊙","⊚","⊛","⁌","⁍","☙","❧","➤","➢","◈","⬩","✦"]) },
+
+  { id:"status", label:"Status", glyph:"✓", items:
+    S(["✓","✔","✗","✘","☑","☒","☐","✕","✖","⊘","⌧","⍻","☓","✚","✛","✜","✝","⳥","⊕","⊖","⊗","⦸","⦶","⚠","⛔","ⓘ","ⓧ","‼","◉","◌","☢","☣","♻","⚐","⚑","◍","⬤","◯","◐","◓"]) },
+
+  { id:"lines", label:"Lines + Box", glyph:"┼", items:
+    S(["─","│","┌","┐","└","┘","├","┤","┬","┴","┼","━","┃","┏","┓","┗","┛","┣","┫","┳","┻","╋","═","║","╔","╗","╚","╝","╠","╣",
+       "╦","╩","╬","╭","╮","╯","╰","╱","╲","╳","┄","┅","┆","┇","┈","┉","╌","╍","╎","╏","▁","▂","▃","▄","▅","▆","▇","█","▉","▊",
+       "▋","▌","▍","▎","▏","░","▒","▓","▔","▕","▖","▗","▘","▙","▚","▛","▜","▝","▞","▟"]) },
+
+  { id:"greek", label:"Greek", glyph:"Ω", items:
+    S(["α","β","γ","δ","ε","ζ","η","θ","ι","κ","λ","μ","ν","ξ","ο","π","ρ","σ","ς","τ","υ","φ","χ","ψ","ω","ϑ","ϕ","ϖ","ϱ","ϵ",
+       "Α","Β","Γ","Δ","Ε","Ζ","Η","Θ","Ι","Κ","Λ","Μ","Ν","Ξ","Ο","Π","Ρ","Σ","Τ","Υ","Φ","Χ","Ψ","Ω","∇","∂"]) },
+
+  { id:"brackets", label:"Brackets", glyph:"⟨ ⟩", items:
+    S(["(",")","[","]","{","}","⟨","⟩","⟪","⟫","⌈","⌉","⌊","⌋","⟦","⟧","⦃","⦄","⦗","⦘","⸢","⸣","⸤","⸥","「","」","『","』","【","】",
+       "〔","〕","〈","〉","‹","›","«","»","❨","❩","❪","❫","❬","❭","❮","❯","❰","❱","⟬","⟭"]) },
+
+  { id:"keyboard", label:"Keys", glyph:"⌘", items:
+    S(["⌘","⌥","⌃","⇧","⇪","⏎","↩","⌫","⌦","⎋","⇥","⇆","⏏","⌅","⌤","␣","⌨","⏻","⏼","⭘","⏯","⏵","⏸","⏹","⏺","⏪","⏩","⏮","⏭","⌧","⎈","⌶","↹","⇞","⇟","⇱","⇲","⌂","⎚","⎙"]) },
+
+  { id:"fractions", label:"Fractions", glyph:"½", items:
+    S(["½","⅓","⅔","¼","¾","⅕","⅖","⅗","⅘","⅙","⅚","⅛","⅜","⅝","⅞","⅐","⅑","⅒","↉","⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹","⁺",
+       "⁻","ⁿ","ⁱ","₀","₁","₂","₃","₄","₅","₆","₇","₈","₉","₊","₋","ₐ","ₑ","ₒ","ₓ","ₙ"]) },
+
+  { id:"music", label:"Music", glyph:"♫", items:
+    S(["♩","♪","♫","♬","♭","♮","♯","🎵","🎶","🎼","𝄞","𝄢","𝄐","𝄑","𝄆","𝄇","🎹","🎸","🎺","🎷","🥁","🎻","🎤","🎧"]) },
+
+  { id:"astro", label:"Astro + Zodiac", glyph:"♓", items:
+    S(["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓","☉","☽","☾","☿","♀","♁","♂","♃","♄","♅","♆","♇","⯓","⚷","☊","☋","⚹","⚺",
+       "⚻","☌","☍","△","□","⚸","✶","☀","☁","☂","☃","☄","☼","☾","✷","⯰","☽","✦","✧","✺"]) },
+
+  { id:"cards", label:"Cards + Dice", glyph:"♠", items:
+    S(["♠","♣","♥","♦","♤","♧","♡","♢","♔","♕","♖","♗","♘","♙","♚","♛","♜","♝","♞","♟","⚀","⚁","⚂","⚃","⚄","⚅","⛀","⛁","⛂","⛃"]) },
+
+  { id:"dingbats", label:"Dingbats", glyph:"☯", items:
+    S(["☀","☁","☂","☃","☄","☉","☎","☏","☑","☒","☓","☕","☖","☗","☘","☙","☚","☛","☜","☝","☞","☟","☠","☢","☣","☤","☥","☦","☧","☨",
+       "☩","☪","☫","☬","☭","☮","☯","⚐","⚑","⚒","⚓","⚔","⚕","⚖","⚗","⚙","⚛","⚜","✁","✂","✃","✄","✆","✇","✈","✉","✊","✋","♻","⚘","❦"]) },
+];
+
+const EMOJI = [
+  { id:"e-smile", label:"Smileys", glyph:"😀", emoji:true, items:
+    S(["😀","😃","😄","😁","😆","😅","😂","🤣","🙂","🙃","😉","😊","😇","🥰","😍","😘","😗","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🫢","🤫","🤔","🫡","🤤",
+       "🤐","🤨","😐","😑","😶","🫥","😏","😒","🙄","😬","😮‍💨","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","🤯","🥳","😎",
+       "🤓","🧐","😕","🫤","😟","🙁","☹️","😮","😯","😲","😳","🥺","🥹","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡"]) },
+
+  { id:"e-hands", label:"Hands", glyph:"👍", emoji:true, items:
+    S(["👍","👎","👌","🤌","🤏","✌️","🤞","🫰","🤟","🤘","🤙","👈","👉","👆","👇","☝️","🫵","✋","🤚","🖐️","🖖","👋","🤝","🙏","🫶","🤲","👐","🙌","👏","🫳",
+       "🫴","💪","✍️","🤜","🤛","✊","👊","🖕","💅","👂","👃","👀","👁️","🧠","🫀","🫁","🦷","🦴","👅","👄"]) },
+
+  { id:"e-hearts", label:"Hearts + Sym", glyph:"❤️", emoji:true, items:
+    S(["❤️","🧡","💛","💚","💙","🩵","💜","🤎","🖤","🩶","🤍","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","♥️","💫","⭐","🌟","✨","⚡","🔥","💧","🌊",
+       "✅","❌","⭕","🚫","❗","❓","‼️","⁉️","💯","🔆","🔱","⚠️","♻️","✳️","✴️","❇️","🆗","🆕","🆒","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🟤","🔺","🔻"]) },
+
+  { id:"e-nature", label:"Nature", glyph:"🌿", emoji:true, items:
+    S(["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦋","🐝","🐞","🐢","🐙","🦀","🐠","🐬","🐳","🦄","🐴","🦌",
+       "🌸","🌺","🌻","🌼","🌷","🌹","🥀","💐","🌾","🌿","🍀","🍃","🌱","🌳","🌲","🌴","🌵","🍄","🐚","🌊","☀️","🌙","🌛","🌜","⭐","🌟","☁️","🌈","❄️","🍂"]) },
+
+  { id:"e-food", label:"Food", glyph:"🍎", emoji:true, items:
+    S(["🍎","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🥑","🥦","🥕","🌽","🌶️","🥒","🥐","🍞","🥖","🥨","🧀","🥚","🍳","🥞","🧇",
+       "🥓","🍔","🍟","🍕","🌭","🥪","🌮","🌯","🥗","🍝","🍜","🍣","🍱","🍤","🍩","🍪","🎂","🍰","🧁","🍫","🍬","🍭","🍦","🍨","☕","🍵","🧉","🍷","🍺","🥂"]) },
+
+  { id:"e-travel", label:"Travel", glyph:"✈️", emoji:true, items:
+    S(["✈️","🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚲","🛵","🏍️","🛴","🚂","🚆","🚊","🚝","🚀","🛸","🚁","⛵","🚤","🛥️","🛳️","⚓","🚏",
+       "🏠","🏡","🏢","🏣","🏥","🏦","🏨","🏪","🏫","🏰","🗽","🗼","🗿","⛲","⛰️","🏔️","🌋","🏖️","🏝️","🏜️","🗺️","🧭","📍","🚩","🌍","🌎","🌏","🌐","🕰️","⛺"]) },
+
+  { id:"e-objects", label:"Objects", glyph:"💡", emoji:true, items:
+    S(["💡","🔦","🕯️","🔌","🔋","📱","💻","⌨️","🖱️","🖥️","🖨️","📷","📸","🎥","📹","🎙️","🎚️","🎛️","🎧","📚","📖","📓","📝","✏️","🖊️","🖋️","🖌️","🖍️","📐","📏",
+       "📎","🔗","✂️","🗂️","📁","📅","📌","🔒","🔓","🔑","🗝️","🔨","🛠️","⚙️","🧰","🪛","🔧","🧲","🔬","🔭","💎","⏰","⏳","⌛","🧪","🪡","🧵","🪙","💰","🎲"]) },
+
+  { id:"e-fun", label:"Celebrate", glyph:"🎉", emoji:true, items:
+    S(["🎉","🎊","🎈","🎁","🎀","🪅","🎄","🎃","🧨","✨","🎯","🎲","🧩","🎮","🕹️","🎨","🖼️","🎭","🎬","🎤","🎵","🎸","🎹","🎺","🥁","🏆","🥇","🥈","🥉","🏅",
+       "⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🏓","🏸","🥅","⛳","🏹","🎣","🛹","🛼","⛸️","🎿","🏂","🏄","🏊","🚴","🧗","🤸","🧘","🎽","🤹","🎪"]) },
+];
+
+/* ---------- STATE ---------- */
+let state = { view:"home", catId:null, page:0, search:"" };
+const PAGE = 30;
+const stage = document.getElementById("stage");
+const crumbs = document.getElementById("crumbs");
+
+function getCat(id){ return CATS.find(c=>c.id===id) || EMOJI.find(c=>c.id===id); }
+function isEmojiCat(id){ return EMOJI.some(c=>c.id===id); }
+
+/* ---------- COPY ---------- */
+function copy(sym){
+  const done = ()=>flash(sym);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(sym).then(done).catch(()=>fallbackCopy(sym,done));
+  } else { fallbackCopy(sym,done); }
+}
+function fallbackCopy(sym,cb){
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=sym; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand("copy"); document.body.removeChild(ta); cb();
+  }catch(e){ cb(); }
+}
+let toastT;
+function flash(sym){
+  const t=document.getElementById("toast");
+  const g=document.getElementById("toastGly");
+  g.textContent=sym;
+  g.className = "big" + (looksEmoji(sym)?" is-emoji":"");
+  document.getElementById("toastTxt").textContent = sym;
+  t.classList.add("show");
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove("show"),1400);
+}
+function looksEmoji(s){
+  // crude: codepoint above BMP or contains variation selector / ZWJ
+  return /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/u.test(s) && !/^[\u2600-\u27BF]$/.test(s)===false ? /[\u{1F000}-\u{1FAFF}]|\uFE0F|\u200D/u.test(s) : /[\u{1F000}-\u{1FAFF}]|\uFE0F|\u200D/u.test(s);
+}
+
+/* ---------- RENDER ---------- */
+function keyEl(sym, emoji){
+  const b=document.createElement("button");
+  b.className="key"+(emoji?" is-emoji":"");
+  b.innerHTML=`<span class="gly">${sym}</span>`;
+  b.addEventListener("click",()=>{
+    copy(sym);
+    b.classList.add("copied");
+    setTimeout(()=>b.classList.remove("copied"),550);
+  });
+  return b;
+}
+
+function folderEl(cat, emoji){
+  const b=document.createElement("button");
+  b.className="key folder"+(emoji?" is-emoji":"")+(cat.useful?" useful":"");
+  const pages = cat.id==="emoji" ? EMOJI.length : Math.ceil(cat.items.length/PAGE);
+  const cnt = cat.id==="emoji" ? EMOJI.length+" sets" : cat.items.length;
+  b.innerHTML=`<span class="cnt">${cnt}</span><span class="fg">${cat.glyph}</span><span class="lbl">${cat.label}</span>`;
+  b.addEventListener("click",()=>{
+    if(cat.id==="emoji"){ state.view="emoji"; }
+    else { state.view="cat"; state.catId=cat.id; state.page=0; }
+    render();
+  });
+  return b;
+}
+
+function setCrumbs(){
+  let html=`<b style="cursor:pointer" id="cb-home">Home</b>`;
+  if(state.view==="emoji"){ html+=` <span class="sep">▸</span> <span>Emoji</span>`; }
+  if(state.view==="cat"){
+    const c=getCat(state.catId);
+    if(isEmojiCat(state.catId)){ html+=` <span class="sep">▸</span> <b style="cursor:pointer" id="cb-emoji">Emoji</b>`; }
+    html+=` <span class="sep">▸</span> <span>${c.label}</span>`;
+  }
+  if(state.search){ html=`<b style="cursor:pointer" id="cb-home">Home</b> <span class="sep">▸</span> <span>Search</span>`; }
+  crumbs.innerHTML=html;
+  const h=document.getElementById("cb-home"); if(h) h.onclick=()=>{state.view="home";state.catId=null;state.search="";document.getElementById("search").value="";render();};
+  const e=document.getElementById("cb-emoji"); if(e) e.onclick=()=>{state.view="emoji";state.catId=null;render();};
+}
+
+function render(){
+  stage.innerHTML="";
+  setCrumbs();
+
+  // SEARCH MODE
+  if(state.search.trim()){
+    renderSearch(state.search.trim().toLowerCase());
+    return;
+  }
+
+  if(state.view==="home"){
+    const g=div("grid");
+    g.appendChild(folderEl(getCat("useful")));
+    CATS.filter(c=>c.id!=="useful").forEach(c=>g.appendChild(folderEl(c)));
+    g.appendChild(folderEl({id:"emoji",label:"Emoji",glyph:"😊"}, true));
+    stage.appendChild(g);
+    return;
+  }
+
+  if(state.view==="emoji"){
+    bar("Emoji", "8 sets · color glyphs", ()=>{state.view="home";render();});
+    const g=div("grid");
+    EMOJI.forEach(c=>g.appendChild(folderEl(c,true)));
+    stage.appendChild(g);
+    return;
+  }
+
+  if(state.view==="cat"){
+    const c=getCat(state.catId);
+    const emoji = !!c.emoji;
+    const pages=Math.ceil(c.items.length/PAGE);
+    const back=()=>{ if(isEmojiCat(c.id)){state.view="emoji";} else {state.view="home";} render(); };
+    bar(c.label, `${c.items.length} symbols · ${pages} page${pages>1?"s":""}`, back);
+    const start=state.page*PAGE;
+    const slice=c.items.slice(start,start+PAGE);
+    const g=div("grid");
+    slice.forEach(s=>g.appendChild(keyEl(s,emoji)));
+    stage.appendChild(g);
+    if(pages>1) stage.appendChild(pager(pages));
+    return;
+  }
+}
+
+function renderSearch(q){
+  const hits=[];
+  const seen=new Set();
+  const push=(s,emoji,label)=>{ if(!seen.has(s)){seen.add(s);hits.push({s,emoji,label});} };
+  // match against category labels + a name map
+  CATS.forEach(c=>{ if(c.label.toLowerCase().includes(q)) c.items.forEach(s=>push(s,false,c.label)); });
+  EMOJI.forEach(c=>{ if(c.label.toLowerCase().includes(q)) c.items.forEach(s=>push(s,true,c.label)); });
+  Object.keys(NAMES).forEach(s=>{ if(NAMES[s].some(n=>n.includes(q))) push(s, EMOJI.some(c=>c.items.includes(s)), "match"); });
+
+  bar(`“${q}”`, hits.length+" result"+(hits.length===1?"":"s"), ()=>{state.search="";document.getElementById("search").value="";state.view="home";render();});
+  if(!hits.length){ stage.appendChild(div("empty")).textContent="No matches. Try: arrow, star, heart, check, money, music, fraction, key, pisces…"; return; }
+  const g=div("grid");
+  hits.slice(0,200).forEach(h=>g.appendChild(keyEl(h.s,h.emoji)));
+  stage.appendChild(g);
+}
+
+/* helpers */
+function div(cls){const d=document.createElement("div");d.className=cls;return d;}
+function bar(title,sub,onBack){
+  const b=div("catbar");
+  const back=document.createElement("button");
+  back.className="btn-back";
+  back.innerHTML=`<span class="a">←</span> Back`;
+  back.onclick=onBack;
+  const t=document.createElement("div");t.className="cat-title";t.textContent=title;
+  const s=document.createElement("div");s.className="cat-sub";s.textContent=sub;
+  b.appendChild(back);b.appendChild(t);b.appendChild(s);
+  stage.appendChild(b);
+}
+function pager(pages){
+  const p=div("pager");
+  const prev=document.createElement("button");prev.innerHTML="‹";prev.disabled=state.page===0;
+  prev.onclick=()=>{if(state.page>0){state.page--;render();}};
+  const next=document.createElement("button");next.innerHTML="›";next.disabled=state.page>=pages-1;
+  next.onclick=()=>{if(state.page<pages-1){state.page++;render();}};
+  const dots=div("dots");
+  for(let i=0;i<pages;i++){const d=div("dot"+(i===state.page?" on":""));d.onclick=()=>{state.page=i;render();};dots.appendChild(d);}
+  const info=document.createElement("span");info.className="pinfo";info.textContent=`page ${state.page+1} / ${pages}`;
+  p.appendChild(prev);p.appendChild(dots);p.appendChild(next);p.appendChild(info);
+  return p;
+}
+
+/* light name map so search by meaning works for common picks */
+const NAMES = {
+  "→":["arrow","right"],"←":["arrow","left"],"↑":["arrow","up"],"↓":["arrow","down"],
+  "★":["star"],"☆":["star","outline"],"✦":["star","sparkle"],
+  "❤️":["heart","love"],"♥":["heart","love"],"♡":["heart","love","outline"],
+  "✓":["check","tick","done","yes"],"✗":["cross","no","x"],"✔":["check","done"],"✅":["check","done","green"],
+  "•":["bullet","dot"],"…":["ellipsis","dots"],
+  "–":["en dash"],"—":["em dash"],
+  "©":["copyright"],"®":["registered"],"™":["trademark"],
+  "°":["degree"],"×":["times","multiply"],"÷":["divide"],"±":["plus minus"],"≈":["approx"],"≠":["not equal"],
+  "€":["euro","money"],"$":["dollar","money"],"£":["pound","money"],"¥":["yen","money"],"₿":["bitcoin","money"],
+  "§":["section"],"¶":["paragraph","pilcrow"],"†":["dagger"],"‡":["double dagger"],
+  "⌘":["command","mac","key"],"⌥":["option","alt","key"],"⇧":["shift","key"],"↩":["return","enter","key"],"⎋":["escape","esc","key"],
+  "♓":["pisces","zodiac"],"♈":["aries"],"♉":["taurus"],"♊":["gemini"],"♋":["cancer"],"♌":["leo"],"♍":["virgo"],"♎":["libra"],"♏":["scorpio"],"♐":["sagittarius"],"♑":["capricorn"],"♒":["aquarius"],
+  "☉":["sun","astro"],"☽":["moon","astro"],"♀":["venus"],"♂":["mars"],"♃":["jupiter"],"♄":["saturn"],
+  "♩":["music","note"],"♪":["music","note"],"♫":["music","note"],"♬":["music","note"],
+  "½":["fraction","half"],"¼":["fraction","quarter"],"¾":["fraction"],
+  "∑":["sum","sigma","math"],"√":["root","square root","math"],"∞":["infinity","math"],"π":["pi","math"],"∫":["integral","math"],
+  "⌀":["diameter"],"☀":["sun","weather"],"☁":["cloud","weather"],"☂":["umbrella","rain"],"❄️":["snow"],
+};
+
+/* search input */
+document.getElementById("search").addEventListener("input",e=>{
+  state.search=e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

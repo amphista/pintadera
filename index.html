@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stream Deck Symbols — Click-to-Copy Unicode &amp; Emoji Picker</title>
+<meta name="description" content="A fast, free click-to-copy picker for 8,000+ Unicode symbols, punctuation, math, arrows, technical glyphs and emoji. Search by name, preview how each character renders on Windows, Mac, Android, Twitter, then copy and paste it anywhere — or build a Stream Deck symbols profile.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0c0d10">
+<link rel="canonical" href="https://streamdeck-symbols.pages.dev/">
+<!-- Open Graph / social -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Stream Deck Symbols">
+<meta property="og:title" content="Stream Deck Symbols — Click-to-Copy Unicode &amp; Emoji Picker">
+<meta property="og:description" content="Search 8,000+ Unicode symbols & emoji, preview real per-OS rendering, click to copy. Build a Stream Deck symbols profile in a couple of clicks.">
+<meta property="og:url" content="https://streamdeck-symbols.pages.dev/">
+<meta property="og:image" content="https://streamdeck-symbols.pages.dev/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A dark control-surface grid of Unicode symbols and emoji with a search bar, titled Stream Deck Symbols.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Stream Deck Symbols — Click-to-Copy Unicode &amp; Emoji Picker">
+<meta name="twitter:description" content="Search 8,000+ Unicode symbols & emoji, preview real per-OS rendering, click to copy.">
+<meta name="twitter:image" content="https://streamdeck-symbols.pages.dev/og-image.png">
+<meta name="twitter:image:alt" content="A grid of Unicode symbols and emoji with a search bar, titled Stream Deck Symbols.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191b21'/%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='6' fill='none' stroke='%233a3d48'/%3E%3Ctext x='16' y='22' font-size='19' text-anchor='middle' fill='%23e9b04a' font-family='Georgia,serif'%3E%E2%98%85%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&family=Noto+Sans+Math&family=Noto+Music&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Stream Deck Symbols","url":"https://streamdeck-symbols.pages.dev/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","description":"Click-to-copy picker for 8,000+ Unicode symbols and emoji with per-OS rendering previews.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<style>
+  :root{
+    --bg-0:#0c0d10; --bg-1:#15161b; --bg-2:#1b1d24;
+    --key-top:#2b2d36; --key-bot:#191b21; --key-edge:#3a3d48;
+    --ink:#f2efe6; --ink-dim:#9a9ba6; --ink-faint:#5d5f6b;
+    --amber:#e9b04a; --amber-soft:#caa15a; --amber-deep:#b8842f;
+    --line:#26282f; --good:#7fb986; --sel:#6aa9e0;
+    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --display:"Fraunces",Georgia,serif;
+    /* per-OS glyph stacks */
+    --native-sym:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Noto Sans Symbols","Noto Sans Math",sans-serif;
+    --native-emo:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+    --win-sym:"Segoe UI Symbol","Segoe UI Emoji",sans-serif;
+    --win-emo:"Segoe UI Emoji","Segoe UI Symbol",sans-serif;
+    --mac-sym:"Apple Symbols","SF Pro","Apple Color Emoji",sans-serif;
+    --mac-emo:"Apple Color Emoji",sans-serif;
+    --noto-sym:"Noto Sans Symbols 2","Noto Sans Symbols","Noto Sans Math","Noto Music","Segoe UI Symbol",sans-serif;
+    --noto-emo:"Noto Color Emoji","Segoe UI Emoji",sans-serif;
+    --sym:var(--native-sym); --emo:var(--native-emo);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1200px 600px at 72% -12%, #1d1f27 0%, transparent 60%),
+      radial-gradient(900px 500px at -5% 112%, #181a22 0%, transparent 55%),
+      var(--bg-0);
+    color:var(--ink); font-family:var(--mono);
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+    padding:0 0 120px; line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 0;
+    padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+  a{color:var(--amber-soft)}
+  .vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* ---------- header ---------- */
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .title-block h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,5vw,50px);line-height:.95;letter-spacing:-.01em}
+  .title-block h1 .e{color:var(--amber);font-style:italic}
+  .title-block p{color:var(--ink-dim);font-size:12.5px;margin-top:11px;max-width:560px;line-height:1.65;letter-spacing:.01em}
+  .title-block p b{color:var(--ink)}
+  .stat{font-size:11px;color:var(--ink-faint);letter-spacing:.06em;text-align:right;line-height:1.7;white-space:nowrap}
+  .stat b{color:var(--amber-soft);font-weight:500}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{position:sticky;top:0;z-index:30;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    margin:20px 0 4px;padding:12px 0;background:linear-gradient(var(--bg-0) 78%,transparent);
+    backdrop-filter:saturate(140%);}
+  .search{position:relative;flex:1 1 240px;min-width:180px;max-width:440px}
+  .search input{width:100%;background:var(--bg-1);border:1px solid var(--line);color:var(--ink);
+    font-family:var(--mono);font-size:16px;padding:11px 34px 11px 38px;border-radius:11px;outline:none;
+    transition:border-color .15s,box-shadow .15s;letter-spacing:.01em}
+  .search input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(233,176,74,.13)}
+  .search input::placeholder{color:var(--ink-faint)}
+  .search .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-family:var(--sym)}
+  .search .clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--ink-faint);
+    cursor:pointer;font-size:17px;padding:4px 6px;border-radius:6px;line-height:1;display:none}
+  .search .clr:hover{color:var(--ink)}
+  .ctrl{display:flex;align-items:center;gap:7px;background:var(--bg-1);border:1px solid var(--line);
+    border-radius:11px;padding:5px 9px;font-size:11px;color:var(--ink-dim);letter-spacing:.04em}
+  .ctrl label{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;font-size:9.5px}
+  .ctrl select{background:var(--bg-2);color:var(--ink);border:1px solid var(--line);border-radius:7px;
+    font-family:var(--mono);font-size:11.5px;padding:5px 6px;cursor:pointer;outline:none}
+  .ctrl select:focus-visible{border-color:var(--amber)}
+  .tgl{display:inline-flex;align-items:center;gap:8px;background:var(--bg-1);border:1px solid var(--line);
+    color:var(--ink-dim);border-radius:11px;padding:9px 13px;font-size:11px;letter-spacing:.06em;cursor:pointer;
+    text-transform:uppercase;transition:border-color .15s,color .15s,background .15s;white-space:nowrap}
+  .tgl:hover{border-color:var(--amber-soft);color:var(--ink)}
+  .tgl[aria-pressed="true"]{background:rgba(233,176,74,.12);border-color:var(--amber);color:var(--amber)}
+  .tgl .dotmark{width:8px;height:8px;border-radius:2px;border:1px solid currentColor;flex:none}
+  .tgl[aria-pressed="true"] .dotmark{background:var(--amber)}
+
+  /* ---------- crumbs ---------- */
+  .crumbs{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink-faint);letter-spacing:.1em;
+    text-transform:uppercase;margin:14px 2px 4px;min-height:14px;flex-wrap:wrap}
+  .crumbs button{background:none;border:0;color:var(--amber-soft);font-family:var(--mono);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:0}
+  .crumbs button:hover{color:var(--amber)}
+  .crumbs .sep{opacity:.5}
+  .crumbs .here{color:var(--ink-dim)}
+
+  /* ---------- grid ---------- */
+  .grid{display:grid;gap:11px;margin-top:16px;grid-template-columns:repeat(auto-fill,minmax(82px,1fr))}
+  @media(max-width:520px){.grid{gap:8px;grid-template-columns:repeat(auto-fill,minmax(62px,1fr))}}
+  .key{position:relative;aspect-ratio:1/1;border:none;cursor:pointer;border-radius:13px;
+    background:linear-gradient(180deg,var(--key-top),var(--key-bot));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 -2px 5px rgba(0,0,0,.5),0 5px 13px rgba(0,0,0,.4);
+    color:var(--ink);display:flex;align-items:center;justify-content:center;flex-direction:column;
+    transition:transform .12s ease,box-shadow .12s ease,outline-color .12s;outline:1.5px solid transparent;
+    outline-offset:1px;overflow:hidden;padding:6px;min-height:44px}
+  .key:hover{transform:translateY(-2px);outline-color:rgba(233,176,74,.5);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -2px 5px rgba(0,0,0,.5),0 9px 20px rgba(0,0,0,.5)}
+  .key:active{transform:translateY(1px) scale(.985)}
+  .key:focus-visible{outline:2.5px solid var(--amber);outline-offset:2px}
+  .key.copied{outline-color:var(--good);box-shadow:0 0 0 3px rgba(127,185,134,.28),0 9px 20px rgba(0,0,0,.5)}
+  .key .gly{font-family:var(--sym);font-size:clamp(20px,3.2vw,30px);line-height:1;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;max-width:100%;pointer-events:none}
+  .key .gly.as-emoji{font-family:var(--emo)}
+  .key .gly img{width:clamp(26px,3.6vw,34px);height:clamp(26px,3.6vw,34px);object-fit:contain;display:block}
+  .key .cp{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:7.5px;color:var(--ink-faint);
+    letter-spacing:.02em;opacity:0;transition:opacity .15s;pointer-events:none;font-variant-numeric:tabular-nums}
+  .key:hover .cp,.key:focus-visible .cp{opacity:.75}
+  /* dual-nature (text-default but emoji-capable) marker */
+  .key.dual::after{content:"";position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;
+    background:var(--amber-soft);opacity:.6}
+  /* selection */
+  .key.selected{outline-color:var(--sel);box-shadow:0 0 0 2px rgba(106,169,224,.45),0 9px 20px rgba(0,0,0,.5)}
+  .key .selmark{position:absolute;top:5px;left:6px;width:15px;height:15px;border-radius:5px;border:1.5px solid var(--ink-faint);
+    display:none;align-items:center;justify-content:center;font-size:11px;color:#0c0d10;font-family:var(--mono);background:transparent}
+  body.selmode .key.sym .selmark{display:flex}
+  .key.selected .selmark{background:var(--sel);border-color:var(--sel)}
+  .key.selected .selmark::before{content:"✓"}
+
+  /* folder key */
+  .key.folder{justify-content:space-between;align-items:stretch;padding:11px 10px 9px;cursor:pointer}
+  .key.folder .fg{flex:1;display:flex;align-items:center;justify-content:center;font-family:var(--sym);
+    font-size:clamp(19px,2.8vw,28px);color:var(--amber-soft)}
+  .key.folder.is-emoji .fg{font-family:var(--emo);color:var(--ink)}
+  .key.folder .lbl{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);
+    text-align:center;line-height:1.25;font-weight:500}
+  .key.folder .cnt{position:absolute;top:6px;right:8px;font-size:8px;color:var(--ink-faint);letter-spacing:.02em}
+  .key.folder::before{content:"";position:absolute;top:7px;left:8px;width:12px;height:9px;
+    border:1.5px solid var(--ink-faint);border-radius:2px 3px 2px 2px;opacity:.5}
+  .key.folder.useful::before{border-color:var(--amber)}
+  .key.folder.useful .fg{color:var(--amber)}
+
+  /* category header */
+  .catbar{display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap}
+  .btn-back{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--ink);background:var(--bg-1);
+    border:1px solid var(--line);padding:9px 14px;border-radius:10px;cursor:pointer;display:inline-flex;
+    align-items:center;gap:8px;transition:border-color .15s,color .15s}
+  .btn-back:hover{border-color:var(--amber);color:var(--amber)}
+  .btn-back .a{font-family:var(--sym)}
+  .cat-title{font-family:var(--display);font-size:clamp(20px,3.4vw,30px);font-weight:600}
+  .cat-sub{font-size:11px;color:var(--ink-faint);letter-spacing:.04em;margin-left:auto;text-align:right}
+
+  /* pager */
+  .pager{display:flex;align-items:center;gap:9px;margin:20px 0 0;flex-wrap:wrap}
+  .pager button{background:var(--bg-1);border:1px solid var(--line);color:var(--ink);width:38px;height:38px;
+    border-radius:10px;cursor:pointer;font-family:var(--sym);font-size:16px;transition:border-color .15s,color .15s,opacity .15s}
+  .pager button:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+  .pager button:disabled{opacity:.3;cursor:default}
+  .pager .pinfo{font-size:11px;color:var(--ink-dim);letter-spacing:.05em}
+  .pager .jump{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-faint)}
+  .pager .jump input{width:54px;background:var(--bg-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:7px;font-family:var(--mono);font-size:11px;padding:6px;text-align:center;outline:none}
+  .pager .jump input:focus{border-color:var(--amber)}
+
+  .empty{color:var(--ink-faint);font-size:13px;padding:40px 4px;letter-spacing:.02em;line-height:1.7}
+
+  /* select tray */
+  .tray{position:fixed;left:50%;bottom:0;transform:translate(-50%,130%);z-index:40;width:min(960px,calc(100% - 24px));
+    background:linear-gradient(180deg,#16181f,#101116);border:1px solid var(--key-edge);border-bottom:none;
+    border-radius:14px 14px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.6);padding:13px 16px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;transition:transform .25s ease;
+    padding-bottom:max(13px,env(safe-area-inset-bottom))}
+  .tray.show{transform:translate(-50%,0)}
+  .tray .tcount{font-size:13px;color:var(--ink);letter-spacing:.02em}
+  .tray .tcount b{color:var(--amber);font-size:18px;font-family:var(--display)}
+  .tray .tprev{display:flex;gap:4px;align-items:center;flex:1;min-width:120px;overflow:hidden;
+    font-family:var(--sym);font-size:19px;color:var(--ink-dim);mask-image:linear-gradient(90deg,#000 80%,transparent)}
+  .tray .tprev img{width:21px;height:21px;object-fit:contain}
+  .tray button.t{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+    border-radius:9px;padding:10px 14px;cursor:pointer;border:1px solid var(--line);background:var(--bg-2);color:var(--ink-dim);
+    transition:.15s}
+  .tray button.t:hover{border-color:var(--amber-soft);color:var(--ink)}
+  .tray button.t.primary{background:var(--amber);border-color:var(--amber);color:#1a1305;font-weight:700}
+  .tray button.t.primary:hover{background:#f1bd5e}
+
+  /* modal */
+  .modal-bg{position:fixed;inset:0;z-index:50;background:rgba(6,7,9,.72);backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;padding:18px}
+  .modal-bg.show{display:flex}
+  .modal{background:linear-gradient(180deg,#181a21,#111218);border:1px solid var(--key-edge);border-radius:16px;
+    width:min(720px,100%);max-height:88vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  .modal h2{font-family:var(--display);font-weight:600;font-size:22px;padding:20px 22px 4px}
+  .modal .msub{padding:0 22px 14px;color:var(--ink-dim);font-size:12px;line-height:1.6}
+  .modal .mrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:0 22px 14px}
+  .modal .mrow label{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em}
+  .modal .mrow input[type=number]{width:70px;background:var(--bg-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;font-family:var(--mono);font-size:13px;padding:7px;text-align:center;outline:none}
+  .modal .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .modal .seg button{background:var(--bg-2);border:0;color:var(--ink-dim);font-family:var(--mono);font-size:11px;
+    padding:8px 13px;cursor:pointer;letter-spacing:.04em}
+  .modal .seg button[aria-selected=true]{background:var(--amber);color:#1a1305;font-weight:700}
+  .modal textarea{width:calc(100% - 44px);margin:0 22px 14px;height:230px;background:#0b0c10;border:1px solid var(--line);
+    color:var(--ink-dim);border-radius:10px;font-family:var(--mono);font-size:11px;line-height:1.5;padding:12px;
+    resize:vertical;outline:none;white-space:pre;overflow:auto}
+  .modal .mfoot{display:flex;gap:10px;flex-wrap:wrap;padding:0 22px 20px;align-items:center}
+  .modal .mfoot .sp{flex:1}
+  .modal button.mb{font-family:var(--mono);font-size:12px;letter-spacing:.04em;border-radius:10px;padding:11px 16px;
+    cursor:pointer;border:1px solid var(--line);background:var(--bg-2);color:var(--ink);transition:.15s}
+  .modal button.mb:hover{border-color:var(--amber-soft)}
+  .modal button.mb.primary{background:var(--amber);border-color:var(--amber);color:#1a1305;font-weight:700}
+  .modal button.mb.ghost{background:none;color:var(--ink-faint)}
+
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:#101116;border:1px solid var(--line);color:var(--ink);padding:11px 17px;border-radius:12px;
+    font-size:13px;letter-spacing:.01em;box-shadow:0 10px 30px rgba(0,0,0,.6);transition:opacity .2s,transform .2s;
+    z-index:60;display:flex;align-items:center;gap:11px}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast .big{font-family:var(--sym);font-size:22px;color:var(--amber);display:flex;align-items:center}
+  .toast .big.as-emoji{font-family:var(--emo);color:inherit}
+  .toast .big img{width:24px;height:24px;object-fit:contain}
+  .toast b{color:var(--good);font-weight:500}
+  .toast .nm{color:var(--ink-faint);font-size:11px}
+
+  footer{margin-top:46px;border-top:1px solid var(--line);padding-top:22px;color:var(--ink-faint);font-size:11px;
+    line-height:1.75;letter-spacing:.01em;max-width:820px}
+  footer b{color:var(--ink-dim);font-weight:500}
+  footer .amk{color:var(--amber-soft)}
+  footer p{margin-bottom:12px}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <h1>Stream&nbsp;Deck <span class="e">Symbols</span></h1>
+      <p><b>Click any glyph to copy it</b> — then paste it wherever you need. Search 8,000+ Unicode symbols, punctuation, math, arrows, technical keys and emoji, and preview how each one actually renders per platform before you use it. Built to load up a Stream&nbsp;Deck “Symbols” profile, useful anywhere you type.</p>
+    </div>
+    <div class="stat" id="stat" aria-hidden="true"></div>
+  </header>
+
+  <div class="toolbar" role="search">
+    <div class="search">
+      <span class="ic" aria-hidden="true">⌕</span>
+      <label class="vh" for="search">Search symbols by name</label>
+      <input id="search" type="text" placeholder="search by name — arrow, heart, euro, command…" autocomplete="off" spellcheck="false" enterkeyhint="search">
+      <button class="clr" id="clr" type="button" aria-label="Clear search">✕</button>
+    </div>
+    <div class="ctrl">
+      <label for="os">Preview</label>
+      <select id="os" aria-label="Preview platform rendering">
+        <option value="native">This device</option>
+        <option value="windows">Windows</option>
+        <option value="apple">Apple</option>
+        <option value="google">Google / Android</option>
+        <option value="twitter">Twitter / X</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label for="psize">Per&nbsp;page</label>
+      <select id="psize" aria-label="Symbols per page">
+        <option value="30">30 · XL page</option>
+        <option value="60">60</option>
+        <option value="120">120</option>
+        <option value="100000">All</option>
+      </select>
+    </div>
+    <button class="tgl" id="selToggle" type="button" aria-pressed="false" title="Select multiple glyphs to export a Stream Deck profile">
+      <span class="dotmark" aria-hidden="true"></span><span>Select</span>
+    </button>
+  </div>
+
+  <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+  <main id="stage"></main>
+
+  <footer>
+    <p id="aboutPreview"></p>
+    <p><b>Building a Stream Deck Symbols profile?</b> Turn on <span class="amk">Select</span>, tap the glyphs you want, then <span class="amk">Export</span>. You’ll get a ready-to-paste prompt for Claude Code that uses the Stream Deck MCP to create the profile — folders, pages, and a <span class="amk">System ▸ Text</span> action on every key that types the symbol. The export reserves the two bottom corners of each XL page for Back + Next, so 30 glyphs map to one physical page.</p>
+    <p><b>About.</b> Character data is generated from the <a href="https://www.unicode.org/" rel="noopener">Unicode Character Database</a>; emoji metadata and the Apple / Google / Twitter preview images come from <a href="https://github.com/iamcal/emoji-data" rel="noopener">emoji-datasource</a> via jsDelivr; the cross-platform line-art reference uses Google’s <a href="https://fonts.google.com/noto" rel="noopener">Noto</a> symbol fonts. CJK, Hangul and other non-Latin scripts are intentionally excluded. Free &amp; open — no tracking, no backend.</p>
+  </footer>
+</div>
+
+<!-- select tray -->
+<div class="tray" id="tray" role="region" aria-label="Selection">
+  <span class="tcount"><b id="trayN">0</b> selected</span>
+  <span class="tprev" id="trayPrev" aria-hidden="true"></span>
+  <button class="t" id="trayClear" type="button">Clear</button>
+  <button class="t primary" id="trayExport" type="button">Export ▸</button>
+</div>
+
+<!-- export modal -->
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h2 id="modalTitle">Export for Stream Deck</h2>
+    <p class="msub" id="modalSub"></p>
+    <div class="mrow">
+      <label for="kpp">Keys / page</label>
+      <input type="number" id="kpp" min="1" max="30" value="30">
+      <span style="color:var(--ink-faint);font-size:11px">XL = 32 keys, 2 reserved for Back + Next ⟶ max 30</span>
+    </div>
+    <div class="mrow">
+      <label>Format</label>
+      <div class="seg" id="fmtSeg" role="tablist" aria-label="Export format">
+        <button role="tab" aria-selected="true" data-fmt="prompt">Claude Code prompt</button>
+        <button role="tab" aria-selected="false" data-fmt="json">JSON only</button>
+      </div>
+    </div>
+    <textarea id="exportText" readonly spellcheck="false" aria-label="Export output"></textarea>
+    <div class="mfoot">
+      <button class="mb primary" id="copyExport" type="button">Copy to clipboard</button>
+      <button class="mb" id="dlExport" type="button">Download .json</button>
+      <span class="sp"></span>
+      <button class="mb ghost" id="closeModal" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"><span class="big" id="toastGly"></span><span><b>copied</b> <span id="toastTxt" class="nm"></span></span></div>
+<div class="vh" id="live" aria-live="polite" aria-atomic="true"></div>
+
+<script src="symbols-data.js"></script>
+<script>
+"use strict";
+/* ============================== DATA ============================== */
+const DATA = window.SD_DATA || {meta:{},useful:{items:[]},symbols:[],emoji:[]};
+const SYM_FOLDERS = DATA.symbols;            // [{id,label,glyph,items}]
+const EMO_FOLDERS = DATA.emoji;
+const USEFUL = DATA.useful;
+
+// flat index + char map (with folder backrefs) for search & selection
+const INDEX = [];
+const CHARMAP = new Map();
+const FORDER = {};      // folderId -> display order
+let _order = 0;
+function indexFolder(f, isEmoji){
+  const order = _order++; FORDER[f.id] = order;
+  const meta = {folderId:f.id, folderLabel:f.label, order:order, emoji:isEmoji};
+  for(const it of f.items){
+    const rec = Object.assign({}, it, meta);
+    INDEX.push(rec);
+    if(!CHARMAP.has(it.c)) CHARMAP.set(it.c, rec);
+  }
+}
+indexFolder(USEFUL,false);
+SYM_FOLDERS.forEach(f=>indexFolder(f,false));
+EMO_FOLDERS.forEach(f=>indexFolder(f,true));
+
+/* search aliases — common names the official Unicode name misses */
+const ALIASES = {
+ '⌘':['command','cmd','mac','clover'],'⌥':['option','alt','mac'],'⌃':['control','ctrl'],'⇧':['shift'],'⇪':['caps lock','capslock'],
+ '⏎':['return','enter'],'↩':['return','enter'],'⌫':['backspace','delete','del'],'⌦':['forward delete'],'⎋':['escape','esc'],
+ '⇥':['tab'],'␣':['space','spacebar'],'⌨':['keyboard'],'⏏':['eject'],'⏻':['power'],
+ '→':['right'],'←':['left'],'↑':['up'],'↓':['down'],'↔':['left right'],
+ '€':['euro','eur'],'£':['pound','gbp','sterling'],'$':['dollar','usd'],'¥':['yen','yuan'],'₿':['bitcoin','btc'],'¢':['cent'],'₹':['rupee'],'₩':['won'],'₽':['ruble'],
+ '©':['copyright'],'®':['registered'],'™':['trademark','tm'],'℠':['service mark'],'°':['degree','degrees'],'№':['number','numero'],
+ '•':['bullet','dot'],'…':['ellipsis','dot dot dot'],'–':['en dash','endash'],'—':['em dash','emdash','mdash'],'·':['middle dot','interpunct'],
+ '×':['times','multiply','multiplication'],'÷':['divide','division','obelus'],'±':['plus minus','plusminus'],'∓':['minus plus'],
+ '≈':['approx','approximately','almost equal'],'≠':['not equal','ne'],'≤':['less than or equal','lte'],'≥':['greater than or equal','gte'],
+ '✓':['check','tick','done','yes','correct'],'✔':['check','tick','done'],'✗':['cross','x','no','wrong'],'✘':['cross','x','heavy'],
+ '★':['star','filled','solid'],'☆':['star','outline','empty'],'✦':['star','sparkle'],'♥':['heart','love'],'♡':['heart','outline'],
+ '½':['half','one half'],'¼':['quarter','one quarter'],'¾':['three quarters'],'⅓':['third'],'⅔':['two thirds'],
+ '∞':['infinity','infinite'],'√':['sqrt','square root','radical'],'∑':['sum','sigma','summation'],'∏':['product','pi'],'∫':['integral'],
+ 'π':['pi'],'µ':['micro','mu'],'Ω':['ohm','omega'],'Δ':['delta','change'],'∂':['partial','derivative'],'∇':['nabla','del','gradient'],
+ '§':['section'],'¶':['paragraph','pilcrow'],'†':['dagger'],'‡':['double dagger'],'‰':['per mille','permille'],
+ '←':['left arrow'],'⇒':['implies','double arrow','then'],'⇔':['iff','if and only if'],'∈':['element of','in'],'∉':['not in'],
+ '☑':['checkbox','checked'],'☐':['checkbox','empty'],'⚠':['warning','caution'],'⛔':['no entry','forbidden'],'☢':['radioactive'],'☣':['biohazard'],'♻':['recycle','recycling'],
+};
+function aliasesFor(c){ return ALIASES[c] || (c.length>1 ? (ALIASES[c.replace(/️/g,'')]||[]) : []); }
+
+/* ============================== STATE ============================== */
+const LS = {
+  get os(){return localStorage.getItem('sd_os')||'native';},
+  set os(v){localStorage.setItem('sd_os',v);},
+  get psize(){return parseInt(localStorage.getItem('sd_psize')||'30',10);},
+  set psize(v){localStorage.setItem('sd_psize',String(v));},
+  get sel(){try{return JSON.parse(localStorage.getItem('sd_sel')||'[]');}catch(e){return [];}},
+  set sel(arr){localStorage.setItem('sd_sel',JSON.stringify(arr));},
+};
+const state = {
+  view:'home', catId:null, page:0, search:'',
+  os: LS.os, psize: LS.psize, selMode:false,
+  selected: new Map(),  // char -> rec
+};
+// restore selection
+LS.sel.forEach(c=>{ const r=CHARMAP.get(c); if(r) state.selected.set(c,r); });
+
+const IMAGE_OS = {apple:1,google:1,twitter:1};
+const EMOJI_SRC = {
+  apple:'emoji-datasource-apple@16.0.0/img/apple',
+  google:'emoji-datasource-google@16.0.0/img/google',
+  twitter:'emoji-datasource-twitter@16.0.0/img/twitter',
+};
+function emojiURL(eu, os){ return `https://cdn.jsdelivr.net/npm/${EMOJI_SRC[os]}/64/${String(eu).toLowerCase()}.png`; }
+
+const $ = id=>document.getElementById(id);
+const stage=$('stage'), crumbs=$('crumbs'), live=$('live');
+
+/* ============================== RENDER GLYPH (OS-aware) ============================== */
+/* Decides, per glyph + chosen platform, whether to show a color emoji
+   (image or emoji-font) or a line-art symbol — so the preview matches
+   how the character really renders when pasted somewhere. */
+function glyphNode(rec, opts){
+  opts = opts||{};
+  const os = state.os;
+  const span=document.createElement('span');
+  span.className='gly';
+  const emojiCapable = rec.e>=1 && rec.eu;
+  if(emojiCapable && IMAGE_OS[os]){
+    const img=document.createElement('img');
+    img.src=emojiURL(rec.eu, os);
+    img.alt=''; img.loading='lazy'; img.decoding='async'; img.draggable=false;
+    img.addEventListener('error',()=>{ // CDN miss → fall back to emoji font
+      const s=document.createElement('span'); s.className='gly-fallback';
+      s.style.fontFamily='var(--emo)'; s.textContent=emojiText(rec);
+      img.replaceWith(s);
+    },{once:true});
+    span.appendChild(img);
+  } else if(rec.e>=1){
+    span.classList.add('as-emoji');
+    span.textContent=emojiText(rec);
+  } else {
+    span.textContent=rec.c;
+  }
+  return span;
+}
+// add VS16 so the system emoji font renders color for text-default emoji
+function emojiText(rec){
+  if(rec.e===1 && !/️/.test(rec.c)) return rec.c+'️';
+  return rec.c;
+}
+
+/* ============================== COPY ============================== */
+let toastT;
+function copy(rec){
+  const txt=rec.c;
+  const done=()=>flash(rec);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  } else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,cb){
+  try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);cb();
+  }catch(e){cb();}
+}
+function flash(rec){
+  const t=$('toast'), g=$('toastGly');
+  g.className='big'; g.textContent='';
+  g.appendChild(glyphNode(rec));
+  if(rec.e>=1 && !IMAGE_OS[state.os]) g.classList.add('as-emoji');
+  $('toastTxt').textContent = titleName(rec);
+  t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1500);
+  live.textContent = `Copied ${titleName(rec)} to clipboard`;
+}
+function titleName(rec){ return `${rec.n} (U+${rec.u.toUpperCase().replace(/-/g,' U+')})`; }
+function ariaLabel(rec){ return `Copy ${rec.c} — ${rec.n}, U+${rec.u.toUpperCase()}`; }
+
+/* ============================== KEY BUILDERS ============================== */
+function symKey(rec){
+  const b=document.createElement('button');
+  b.className='key sym'+(rec.e===1?' dual':'');
+  b.type='button'; b.dataset.c=rec.c; b.setAttribute('role','gridcell');
+  b.tabIndex=-1;
+  b.setAttribute('aria-label', ariaLabel(rec));
+  b._rec=rec; // the folder-tagged record this key was rendered from (used by copy/select)
+  const sel=document.createElement('span'); sel.className='selmark'; sel.setAttribute('aria-hidden','true');
+  b.appendChild(sel);
+  b.appendChild(glyphNode(rec));
+  const cp=document.createElement('span'); cp.className='cp'; cp.textContent='U+'+rec.u.toUpperCase(); b.appendChild(cp);
+  if(state.selected.has(rec.c)){ b.classList.add('selected'); b.setAttribute('aria-pressed','true'); }
+  return b;
+}
+function folderKey(f, isEmoji, onOpen){
+  const b=document.createElement('button');
+  b.className='key folder'+(isEmoji?' is-emoji':'')+(f.id==='useful'?' useful':'');
+  b.type='button'; b.tabIndex=-1; b.setAttribute('role','gridcell');
+  const count = f.count!=null ? f.count : (f.items?f.items.length:0);
+  b.setAttribute('aria-label', `Open ${f.label} folder, ${count} ${f.sub||'glyphs'}`);
+  b.innerHTML=`<span class="cnt">${count}</span><span class="fg"></span><span class="lbl">${f.label}</span>`;
+  b.querySelector('.fg').textContent=f.glyph;
+  b.addEventListener('click',onOpen);
+  return b;
+}
+
+/* ============================== GRID + ROVING FOCUS ============================== */
+function makeGrid(){
+  const g=document.createElement('div'); g.className='grid'; g.setAttribute('role','grid');
+  g.addEventListener('keydown',gridKeys);
+  return g;
+}
+function firstFocusable(g){ const b=g.querySelector('.key'); if(b) b.tabIndex=0; }
+function gridKeys(e){
+  const g=e.currentTarget;
+  const keys=[...g.querySelectorAll('.key')];
+  const i=keys.indexOf(document.activeElement);
+  if(i<0) return;
+  const cols=gridCols(g,keys);
+  let n=-1;
+  switch(e.key){
+    case 'ArrowRight':n=i+1;break; case 'ArrowLeft':n=i-1;break;
+    case 'ArrowDown':n=i+cols;break; case 'ArrowUp':n=i-cols;break;
+    case 'Home':n=0;break; case 'End':n=keys.length-1;break;
+    default:return;
+  }
+  e.preventDefault();
+  if(n<0||n>=keys.length) return;
+  keys[i].tabIndex=-1; keys[n].tabIndex=0; keys[n].focus();
+}
+function gridCols(g,keys){
+  if(keys.length<2) return 1;
+  const top=keys[0].offsetTop; let c=0;
+  for(const k of keys){ if(k.offsetTop===top) c++; else break; }
+  return Math.max(1,c);
+}
+
+/* delegated activation for symbol keys */
+function bindGrid(g){
+  g.addEventListener('click',e=>{
+    const b=e.target.closest('.key.sym'); if(!b) return;
+    const rec=b._rec||CHARMAP.get(b.dataset.c); if(!rec) return;
+    if(state.selMode){ toggleSelect(rec,b); }
+    else { copy(rec); b.classList.add('copied'); setTimeout(()=>b.classList.remove('copied'),520); }
+  });
+}
+
+/* ============================== VIEWS ============================== */
+function getFolder(id){
+  if(id==='useful') return USEFUL;
+  return SYM_FOLDERS.find(f=>f.id===id) || EMO_FOLDERS.find(f=>f.id===id);
+}
+function render(){
+  stage.innerHTML=''; setCrumbs();
+  if(state.search.trim()){ renderSearch(state.search.trim()); return; }
+  if(state.view==='home') return renderHome();
+  if(state.view==='emoji') return renderEmojiHome();
+  if(state.view==='cat') return renderCat();
+}
+function renderHome(){
+  const g=makeGrid();
+  g.appendChild(folderKey(Object.assign({sub:'top picks'},USEFUL), false, ()=>open('useful')));
+  SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id))));
+  const emCount=EMO_FOLDERS.reduce((n,f)=>n+f.items.length,0);
+  g.appendChild(folderKey({id:'emoji',label:'Emoji',glyph:'😊',count:EMO_FOLDERS.length,sub:'sets'},true,()=>{state.view='emoji';state.page=0;render();}));
+  stage.appendChild(g); bindGrid(g); firstFocusable(g);
+}
+function renderEmojiHome(){
+  bar('Emoji', EMO_FOLDERS.length+' sets · color glyphs', ()=>{state.view='home';render();});
+  const g=makeGrid();
+  EMO_FOLDERS.forEach(f=>g.appendChild(folderKey(f,true,()=>open(f.id))));
+  stage.appendChild(g); bindGrid(g); firstFocusable(g);
+}
+function renderCat(){
+  const f=getFolder(state.catId); if(!f){state.view='home';return render();}
+  const isEmoji=EMO_FOLDERS.some(x=>x.id===f.id);
+  const per=state.psize, pages=Math.max(1,Math.ceil(f.items.length/per));
+  if(state.page>=pages) state.page=0;
+  const back=()=>{ if(isEmoji){state.view='emoji';} else {state.view='home';} state.catId=null; render(); };
+  bar(f.label, `${f.items.length} glyphs · ${pages>1?('page '+(state.page+1)+' / '+pages):'1 page'}`, back, isEmoji);
+  const start=state.page*per, slice=f.items.slice(start,start+per);
+  const g=makeGrid();
+  slice.forEach(it=>{ // tag with THIS folder so export grouping matches where the glyph was picked
+    const rec=Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
+    g.appendChild(symKey(rec)); });
+  stage.appendChild(g); bindGrid(g); firstFocusable(g);
+  if(pages>1) stage.appendChild(pager(pages,f.items.length));
+}
+function renderSearch(qraw){
+  const q=qraw.toLowerCase();
+  const cpQuery=q.replace(/^u\+/,'').trim();
+  const isCp=/^[0-9a-f]{2,6}$/.test(cpQuery);
+  const hits=[]; const seen=new Set(); const LIMIT=600;
+  for(const rec of INDEX){
+    if(seen.has(rec.c)) continue;
+    let m=false;
+    if(isCp){ m = rec.u===cpQuery || rec.u.split('-').includes(cpQuery); }
+    else {
+      m = rec.n.includes(q) || rec.folderLabel.toLowerCase().includes(q)
+        || (rec.k&&rec.k.some(k=>k.includes(q)))
+        || aliasesFor(rec.c).some(a=>a.includes(q));
+    }
+    if(m){ seen.add(rec.c); hits.push(rec); if(hits.length>=LIMIT) break; }
+  }
+  bar(`“${qraw}”`, hits.length+(hits.length>=LIMIT?'+':'')+' result'+(hits.length===1?'':'s'),
+      ()=>{ clearSearch(); }, false);
+  live.textContent = `${hits.length} ${hits.length===1?'result':'results'} for ${qraw}`;
+  if(!hits.length){
+    const e=document.createElement('div'); e.className='empty';
+    e.textContent='No matches. Try a name like arrow, star, heart, check, euro, command, pi, fraction, snowflake — or a code point like U+2605.';
+    stage.appendChild(e); return;
+  }
+  const g=makeGrid();
+  hits.forEach(rec=>g.appendChild(symKey(rec)));
+  stage.appendChild(g); bindGrid(g); firstFocusable(g);
+}
+function open(id){ state.view='cat'; state.catId=id; state.page=0; render(); window.scrollTo({top:0}); }
+
+/* ---------- shared bits ---------- */
+function bar(title,sub,onBack){
+  const b=document.createElement('div'); b.className='catbar';
+  const back=document.createElement('button'); back.className='btn-back'; back.type='button';
+  back.innerHTML='<span class="a" aria-hidden="true">←</span> Back'; back.addEventListener('click',onBack);
+  const t=document.createElement('h2'); t.className='cat-title'; t.textContent=title;
+  const s=document.createElement('div'); s.className='cat-sub'; s.textContent=sub;
+  b.appendChild(back); b.appendChild(t); b.appendChild(s); stage.appendChild(b);
+}
+function pager(pages,total){
+  const p=document.createElement('div'); p.className='pager';
+  const prev=document.createElement('button'); prev.type='button'; prev.innerHTML='‹';
+  prev.setAttribute('aria-label','Previous page'); prev.disabled=state.page===0;
+  prev.addEventListener('click',()=>{if(state.page>0){state.page--;render();window.scrollTo({top:0});}});
+  const next=document.createElement('button'); next.type='button'; next.innerHTML='›';
+  next.setAttribute('aria-label','Next page'); next.disabled=state.page>=pages-1;
+  next.addEventListener('click',()=>{if(state.page<pages-1){state.page++;render();window.scrollTo({top:0});}});
+  const info=document.createElement('span'); info.className='pinfo';
+  info.textContent=`page ${state.page+1} / ${pages} · ${total} glyphs`;
+  const jump=document.createElement('div'); jump.className='jump';
+  jump.innerHTML='<span>go to</span>';
+  const ji=document.createElement('input'); ji.type='number'; ji.min='1'; ji.max=String(pages); ji.value=String(state.page+1);
+  ji.setAttribute('aria-label','Go to page');
+  ji.addEventListener('change',()=>{let v=parseInt(ji.value,10)-1; if(isNaN(v))return; v=Math.max(0,Math.min(pages-1,v)); state.page=v; render(); window.scrollTo({top:0});});
+  jump.appendChild(ji);
+  p.appendChild(prev); p.appendChild(next); p.appendChild(info); p.appendChild(jump);
+  return p;
+}
+function setCrumbs(){
+  crumbs.innerHTML='';
+  const home=document.createElement('button'); home.type='button'; home.textContent='Home';
+  home.addEventListener('click',()=>{state.view='home';state.catId=null;clearSearch(true);});
+  crumbs.appendChild(home);
+  const add=(txt,fn)=>{ const s=document.createElement('span');s.className='sep';s.textContent='▸';crumbs.appendChild(s);
+    if(fn){const b=document.createElement('button');b.type='button';b.textContent=txt;b.addEventListener('click',fn);crumbs.appendChild(b);}
+    else{const e=document.createElement('span');e.className='here';e.textContent=txt;crumbs.appendChild(e);} };
+  if(state.search.trim()){ add('Search'); return; }
+  if(state.view==='emoji'){ add('Emoji'); }
+  if(state.view==='cat'){
+    const f=getFolder(state.catId); const isEmoji=EMO_FOLDERS.some(x=>x.id===state.catId);
+    if(isEmoji) add('Emoji',()=>{state.view='emoji';state.catId=null;render();});
+    add(f?f.label:'—');
+  }
+}
+
+/* ============================== SELECTION ============================== */
+function toggleSelect(rec,btn){
+  if(state.selected.has(rec.c)){ state.selected.delete(rec.c); btn.classList.remove('selected'); btn.removeAttribute('aria-pressed'); }
+  else { state.selected.set(rec.c,rec); btn.classList.add('selected'); btn.setAttribute('aria-pressed','true'); }
+  persistSel(); updateTray();
+}
+function persistSel(){ LS.sel=[...state.selected.keys()]; }
+function updateTray(){
+  const n=state.selected.size; $('trayN').textContent=n;
+  const tray=$('tray'); tray.classList.toggle('show', state.selMode && n>0);
+  const prev=$('trayPrev'); prev.innerHTML='';
+  [...state.selected.values()].slice(0,28).forEach(rec=>prev.appendChild(glyphNode(rec)));
+}
+function setSelMode(on){
+  state.selMode=on; document.body.classList.toggle('selmode',on);
+  $('selToggle').setAttribute('aria-pressed',String(on));
+  updateTray();
+}
+
+/* ============================== EXPORT ============================== */
+function selectedGrouped(){
+  const groups=new Map(); // folderId -> {label, order, items:[]}
+  for(const rec of state.selected.values()){
+    if(!groups.has(rec.folderId)) groups.set(rec.folderId,{label:rec.folderLabel,order:rec.order,items:[]});
+    groups.get(rec.folderId).items.push(rec);
+  }
+  return [...groups.values()].sort((a,b)=>a.order-b.order);
+}
+function cpArray(rec){ return rec.u.split('-').map(h=>'U+'+h.toUpperCase()); }
+function buildExportJSON(kpp){
+  kpp=Math.max(1,Math.min(30,kpp|0));
+  const navKeys=[24,31];
+  const slots=[]; for(let k=0;k<32;k++) if(!navKeys.includes(k)) slots.push(k);
+  const symbolSlots=slots.slice(0,kpp);
+  const groups=selectedGrouped();
+  let pageCount=0, symCount=0;
+  const folders=groups.map((grp,gi)=>{
+    const pages=[];
+    for(let p=0;p*kpp<grp.items.length;p++){
+      const chunk=grp.items.slice(p*kpp,p*kpp+kpp);
+      pages.push({
+        pageIndex:p,
+        symbolKeys:symbolSlots.slice(0,chunk.length),
+        navKeys:navKeys,
+        symbols:chunk.map((rec,i)=>({
+          key:symbolSlots[i], glyph:rec.c, name:rec.n.toUpperCase(),
+          codepoints:cpArray(rec), suggestedTitle:rec.c
+        }))
+      });
+      pageCount++; symCount+=chunk.length;
+    }
+    return {name:grp.label, order:gi, pages};
+  });
+  return {
+    schemaVersion:'1.0', kind:'streamdeck-symbols-export',
+    device:{modelName:'Stream Deck XL', rows:4, cols:8, keysTotal:32},
+    profile:{name:'Symbols Profile', actionType:'system.text'},
+    layout:{keysPerPage:kpp, navReserved:2, navKeys:navKeys,
+            navRoles:{'24':'previous_page','31':'next_page'}, keyOrder:'row-major'},
+    totals:{symbolCount:symCount, folderCount:folders.length, pageCount:pageCount},
+    folders:folders
+  };
+}
+const PROMPT_HEAD =
+`Use the streamdeck-designer skill and the streamdeck-mcp tools to build my "Symbols Profile" on my Stream Deck XL (8x4 = 32 keys). A JSON export from my glyph picker is at the bottom.
+
+Steps:
+1. Call streamdeck_read_profiles and confirm the device is a Stream Deck XL (use device.ModelName). If it isn't an XL, stop and tell me before authoring.
+2. Create (or reuse) a profile named "Symbols Profile". For each folder in the JSON create a matching folder; for each page in a folder create a page.
+3. On each page, for every entry in "symbols", put a button on that "key" whose action TYPES the "glyph" using the native Elgato System > Text action (the action that types a string into the focused app). Set the button title to "suggestedTitle" (the glyph itself) so the key face shows the symbol.
+4. Reserve the nav keys in layout.navKeys: key 24 = Back (previous_page), key 31 = Next (next_page). Don't put a symbol on a nav key.
+5. Keep it minimal: glyph title on a plain dark background, consistent across keys. If you generate background tiles, batch them in ONE streamdeck_create_icon call. Don't also bake the glyph into the PNG (the title overlays the image and would double up).
+6. Write each page in a single streamdeck_write_page call (clear_existing=True, auto_quit_app=True), then streamdeck_restart_app, then streamdeck_read_page to verify.
+
+IMPORTANT — the System > Text action is NOT one of the skill's convenience fields (those cover open/next_page/previous_page). Build the System>Text action object explicitly. Before you emit it, VERIFY the exact System>Text action UUID and the settings field that holds the typed string against references/sdk-primer.md (and Context7 library /websites/elgato_streamdeck_sdk if needed). Do not guess the UUID or payload field — look it up, then write it.
+
+Caveats: the action types the literal "glyph" verbatim (including multi-codepoint emoji/ZWJ in "codepoints"); what lands depends on the target app's font support, not the deck. The device title font may not render full-color emoji or ZWJ sequences on the key face — if a suggestedTitle can't show, keep the System>Text action typing the full glyph but use a short text label for the title.
+
+Export JSON:
+`;
+function buildPrompt(kpp){ return PROMPT_HEAD + JSON.stringify(buildExportJSON(kpp),null,2); }
+
+/* modal wiring */
+let curFmt='prompt';
+function refreshExport(){
+  const kpp=Math.max(1,Math.min(30,parseInt($('kpp').value,10)||30));
+  const json=buildExportJSON(kpp);
+  $('exportText').value = curFmt==='prompt' ? buildPrompt(kpp) : JSON.stringify(json,null,2);
+  $('modalSub').textContent =
+    `${json.totals.symbolCount} glyphs across ${json.totals.folderCount} folder${json.totals.folderCount===1?'':'s'} → ${json.totals.pageCount} Stream Deck page${json.totals.pageCount===1?'':'s'} at ${kpp}/page.`;
+}
+function openModal(){
+  if(!state.selected.size) return;
+  $('modalBg').classList.add('show'); refreshExport(); $('closeModal').focus();
+}
+function closeModal(){ $('modalBg').classList.remove('show'); }
+
+/* ============================== OS + FONT WIRING ============================== */
+function applyOS(){
+  const map={
+    native:['--native-sym','--native-emo'], windows:['--win-sym','--win-emo'],
+    apple:['--mac-sym','--mac-emo'], google:['--noto-sym','--noto-emo'], twitter:['--native-sym','--native-emo'],
+  };
+  const [s,e]=map[state.os]||map.native;
+  document.documentElement.style.setProperty('--sym',`var(${s})`);
+  document.documentElement.style.setProperty('--emo',`var(${e})`);
+  aboutPreviewText();
+}
+function aboutPreviewText(){
+  const txt={
+    native:'Previewing in <b>this device’s</b> own fonts — for you on Windows that’s Segoe UI Symbol + Segoe UI Emoji, i.e. exactly what you’ll get when you paste.',
+    windows:'Previewing the <b>Windows</b> look (Segoe UI Symbol / Segoe UI Emoji). Faithful on Windows; on other devices it falls back to the local font.',
+    apple:'Previewing the <b>Apple</b> look. Emoji use Apple’s images; line-art symbols approximate with Apple Symbols (only exact on a Mac).',
+    google:'Previewing the <b>Google / Android</b> look. Emoji use Noto Color Emoji images; line-art symbols use the Noto symbol fonts — a consistent cross-platform reference.',
+    twitter:'Previewing the <b>Twitter / X</b> emoji look (Twemoji images). Non-emoji symbols fall back to your device font.',
+  };
+  $('aboutPreview').innerHTML='<b>Preview accuracy.</b> '+(txt[state.os]||txt.native)+
+    ' Glyphs marked with an amber dot are text by default but turn into a color emoji in rich contexts like email — the preview shows that emoji form so there are no surprises.';
+}
+
+/* ============================== INIT / EVENTS ============================== */
+function clearSearch(reRender){ state.search=''; $('search').value=''; $('clr').style.display='none'; if(reRender!==false){state.view= state.view==='cat'?'cat':'home'; if(reRender===true){state.view='home';} render();} }
+let searchT;
+$('search').addEventListener('input',e=>{
+  state.search=e.target.value; $('clr').style.display=e.target.value?'block':'none';
+  clearTimeout(searchT); searchT=setTimeout(render,90);
+});
+$('clr').addEventListener('click',()=>{ state.search=''; $('search').value=''; $('clr').style.display='none'; $('search').focus(); render(); });
+$('os').addEventListener('change',e=>{ state.os=e.target.value; LS.os=state.os; applyOS(); render(); });
+$('psize').addEventListener('change',e=>{ state.psize=parseInt(e.target.value,10); LS.psize=state.psize; state.page=0; render(); });
+$('selToggle').addEventListener('click',()=>{ setSelMode(!state.selMode); if(state.selMode){live.textContent='Select mode on — click glyphs to add them to your export.';} });
+$('trayClear').addEventListener('click',()=>{ state.selected.clear(); persistSel(); updateTray(); render(); });
+$('trayExport').addEventListener('click',openModal);
+$('closeModal').addEventListener('click',closeModal);
+$('modalBg').addEventListener('click',e=>{ if(e.target===$('modalBg')) closeModal(); });
+$('kpp').addEventListener('input',refreshExport);
+$('fmtSeg').addEventListener('click',e=>{ const b=e.target.closest('[data-fmt]'); if(!b)return;
+  curFmt=b.dataset.fmt; [...$('fmtSeg').children].forEach(c=>c.setAttribute('aria-selected',String(c===b))); refreshExport(); });
+$('copyExport').addEventListener('click',()=>{ const v=$('exportText').value;
+  (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>{ $('copyExport').textContent='Copied ✓'; setTimeout(()=>$('copyExport').textContent='Copy to clipboard',1400);}).catch(()=>{ $('exportText').select(); document.execCommand('copy'); }); });
+$('dlExport').addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(buildExportJSON(parseInt($('kpp').value,10)||30),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='symbols-profile.json'; a.click(); URL.revokeObjectURL(a.href); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if($('modalBg').classList.contains('show')) closeModal(); else if(state.search){clearSearch(); $('search').focus();} }
+  if(e.key==='/'&&document.activeElement!==$('search')&&!/input|textarea/i.test(document.activeElement.tagName)){ e.preventDefault(); $('search').focus(); } });
+
+// stat line
+(function(){ const m=DATA.meta||{};
+  $('stat').innerHTML=`<b>${(m.total||INDEX.length).toLocaleString()}</b> glyphs<br>${(m.symbolTotal||0).toLocaleString()} symbols · ${(m.emojiTotal||0).toLocaleString()} emoji`; })();
+
+// boot
+$('os').value=state.os; $('psize').value=String(state.psize);
+applyOS(); updateTray(); render();
+</script>
+</body>
+</html>
