@@ -1,14 +1,27 @@
 {
   "name": "streamdeck-symbols",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "version": "2.0.0",
+  "description": "A fast, free click-to-copy picker for 8,000+ Unicode symbols and emoji, with per-OS rendering previews and Stream Deck profile export.",
+  "homepage": "https://streamdeck-symbols.pages.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amphista/streamdeck-symbols.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "scripts": {
+    "build": "node generate-data.mjs",
+    "start": "python -m http.server 8000"
+  },
+  "keywords": [
+    "unicode",
+    "emoji",
+    "symbols",
+    "clipboard",
+    "picker",
+    "stream-deck",
+    "elgato"
+  ],
+  "author": "Marysia",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "emoji-datasource": "^16.0.0"
