@@ -2,7 +2,7 @@
 /**
  * generate-data.mjs
  * ------------------------------------------------------------------
- * Builds the symbol dataset for the Stream Deck Symbols picker.
+ * Builds the symbol dataset for the Pintadera picker.
  *
  * Sources (all in ./data, fetched from unicode.org) + the
  * `emoji-datasource` npm package (names / keywords / CDN image keys).

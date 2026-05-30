@@ -1,29 +1,34 @@
 {
-  "name": "streamdeck-symbols",
+  "name": "pintadera",
   "version": "2.0.0",
-  "description": "A fast, free click-to-copy picker for 8,000+ Unicode symbols and emoji, with per-OS rendering previews and Stream Deck profile export.",
-  "homepage": "https://streamdeck-symbols.pages.dev/",
+  "description": "Pintadera — a fast, free, ad-free click-to-copy picker for 8,000+ Unicode symbols, glyphs and emoji, with per-OS rendering previews and Stream Deck profile export.",
+  "homepage": "https://pintadera.twoactualeyes.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amphista/streamdeck-symbols.git"
+    "url": "https://github.com/amphista/pintadera.git"
   },
   "scripts": {
-    "build": "node generate-data.mjs",
+    "build": "node generate-data.mjs && node make-dist.mjs",
+    "og": "node make-og-image.mjs",
     "start": "python -m http.server 8000"
   },
   "keywords": [
     "unicode",
     "emoji",
     "symbols",
+    "glyphs",
     "clipboard",
     "picker",
     "stream-deck",
     "elgato"
   ],
-  "author": "Marysia",
+  "author": "Marysia (Two Actual Eyes)",
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "emoji-datasource": "^16.0.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }
