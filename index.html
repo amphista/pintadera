@@ -3,32 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Stream Deck Symbols — Click-to-Copy Unicode &amp; Emoji Picker</title>
-<meta name="description" content="A fast, free click-to-copy picker for 8,000+ Unicode symbols, punctuation, math, arrows, technical glyphs and emoji. Search by name, preview how each character renders on Windows, Mac, Android, Twitter, then copy and paste it anywhere — or build a Stream Deck symbols profile.">
+<title>Pintadera — Click-to-Copy Unicode &amp; Emoji Picker</title>
+<meta name="description" content="A fast, free, ad-free click-to-copy picker for 8,000+ Unicode symbols, punctuation, math, arrows, technical glyphs and emoji. Search by name, preview how each character renders on Windows, Mac, Android, Twitter, then copy and paste it anywhere — or build a Stream Deck symbols profile.">
+<meta name="author" content="Two Actual Eyes">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0c0d10">
-<link rel="canonical" href="https://streamdeck-symbols.pages.dev/">
+<link rel="canonical" href="https://pintadera.twoactualeyes.com/">
 <!-- Open Graph / social -->
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Stream Deck Symbols">
-<meta property="og:title" content="Stream Deck Symbols — Click-to-Copy Unicode &amp; Emoji Picker">
-<meta property="og:description" content="Search 8,000+ Unicode symbols & emoji, preview real per-OS rendering, click to copy. Build a Stream Deck symbols profile in a couple of clicks.">
-<meta property="og:url" content="https://streamdeck-symbols.pages.dev/">
-<meta property="og:image" content="https://streamdeck-symbols.pages.dev/og-image.png">
+<meta property="og:site_name" content="Pintadera">
+<meta property="og:title" content="Pintadera — Click-to-Copy Unicode &amp; Emoji Picker">
+<meta property="og:description" content="Search 8,000+ Unicode symbols & emoji, preview real per-OS rendering, click to copy. No ads, no tracking. Build a Stream Deck symbols profile in a couple of clicks.">
+<meta property="og:url" content="https://pintadera.twoactualeyes.com/">
+<meta property="og:image" content="https://pintadera.twoactualeyes.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A dark control-surface grid of Unicode symbols and emoji with a search bar, titled Stream Deck Symbols.">
+<meta property="og:image:alt" content="Pintadera — a dark grid of Unicode symbols and emoji with a search bar.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Stream Deck Symbols — Click-to-Copy Unicode &amp; Emoji Picker">
-<meta name="twitter:description" content="Search 8,000+ Unicode symbols & emoji, preview real per-OS rendering, click to copy.">
-<meta name="twitter:image" content="https://streamdeck-symbols.pages.dev/og-image.png">
-<meta name="twitter:image:alt" content="A grid of Unicode symbols and emoji with a search bar, titled Stream Deck Symbols.">
+<meta name="twitter:title" content="Pintadera — Click-to-Copy Unicode &amp; Emoji Picker">
+<meta name="twitter:description" content="Search 8,000+ Unicode symbols & emoji, preview real per-OS rendering, click to copy. No ads, no tracking.">
+<meta name="twitter:image" content="https://pintadera.twoactualeyes.com/og-image.png">
+<meta name="twitter:image:alt" content="Pintadera — a grid of Unicode symbols and emoji with a search bar.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191b21'/%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='6' fill='none' stroke='%233a3d48'/%3E%3Ctext x='16' y='22' font-size='19' text-anchor='middle' fill='%23e9b04a' font-family='Georgia,serif'%3E%E2%98%85%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&family=Noto+Sans+Math&family=Noto+Music&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"Stream Deck Symbols","url":"https://streamdeck-symbols.pages.dev/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","description":"Click-to-copy picker for 8,000+ Unicode symbols and emoji with per-OS rendering previews.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+{"@context":"https://schema.org","@type":"WebApplication","name":"Pintadera","url":"https://pintadera.twoactualeyes.com/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","description":"Click-to-copy picker for 8,000+ Unicode symbols, glyphs and emoji with per-OS rendering previews.","author":{"@type":"Organization","name":"Two Actual Eyes","url":"https://twoactualeyes.com"},"publisher":{"@type":"Organization","name":"Two Actual Eyes","url":"https://twoactualeyes.com"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
 </script>
 <style>
   :root{
@@ -71,6 +72,9 @@
   header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
   .title-block h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,5vw,50px);line-height:.95;letter-spacing:-.01em}
   .title-block h1 .e{color:var(--amber);font-style:italic}
+  .title-block .sub{color:var(--ink);font-size:14.5px;font-weight:500;margin-top:12px;max-width:560px;line-height:1.5;letter-spacing:.005em}
+  .title-block .sub b{color:var(--amber-soft);font-weight:600}
+  .title-block .sub + p{margin-top:7px}
   .title-block p{color:var(--ink-dim);font-size:12.5px;margin-top:11px;max-width:560px;line-height:1.65;letter-spacing:.01em}
   .title-block p b{color:var(--ink)}
   .stat{font-size:11px;color:var(--ink-faint);letter-spacing:.06em;text-align:right;line-height:1.7;white-space:nowrap}
@@ -245,6 +249,8 @@
   footer b{color:var(--ink-dim);font-weight:500}
   footer .amk{color:var(--amber-soft)}
   footer p{margin-bottom:12px}
+  footer .colophon{color:var(--ink-dim)}
+  footer .colophon b{color:var(--amber-soft);font-weight:600}
 
   @media (prefers-reduced-motion: reduce){
     *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
@@ -255,8 +261,9 @@
 <div class="wrap">
   <header class="top">
     <div class="title-block">
-      <h1>Stream&nbsp;Deck <span class="e">Symbols</span></h1>
-      <p><b>Click any glyph to copy it</b> — then paste it wherever you need. Search 8,000+ Unicode symbols, punctuation, math, arrows, technical keys and emoji, and preview how each one actually renders per platform before you use it. Built to load up a Stream&nbsp;Deck “Symbols” profile, useful anywhere you type.</p>
+      <h1>Pintad<span class="e">era</span></h1>
+      <p class="sub">A fast, ad-free click-to-copy picker for <b>8,000+ Unicode symbols, glyphs &amp; emoji</b>.</p>
+      <p><b>Click any glyph to copy it</b> — then paste it wherever you need. Search 8,000+ Unicode symbols, punctuation, math, arrows, technical keys and emoji, and preview how each one actually renders per platform before you use it. Useful anywhere you type — and it can build a Stream&nbsp;Deck “Symbols” profile too.</p>
     </div>
     <div class="stat" id="stat" aria-hidden="true"></div>
   </header>
@@ -299,6 +306,7 @@
     <p id="aboutPreview"></p>
     <p><b>Building a Stream Deck Symbols profile?</b> Turn on <span class="amk">Select</span>, tap the glyphs you want, then <span class="amk">Export</span>. You’ll get a ready-to-paste prompt for Claude Code that uses the Stream Deck MCP to create the profile — folders, pages, and a <span class="amk">System ▸ Text</span> action on every key that types the symbol. The export reserves the two bottom corners of each XL page for Back + Next, so 30 glyphs map to one physical page.</p>
     <p><b>About.</b> Character data is generated from the <a href="https://www.unicode.org/" rel="noopener">Unicode Character Database</a>; emoji metadata and the Apple / Google / Twitter preview images come from <a href="https://github.com/iamcal/emoji-data" rel="noopener">emoji-datasource</a> via jsDelivr; the cross-platform line-art reference uses Google’s <a href="https://fonts.google.com/noto" rel="noopener">Noto</a> symbol fonts. CJK, Hangul and other non-Latin scripts are intentionally excluded. Free &amp; open — no tracking, no backend.</p>
+    <p class="colophon"><b>Pintadera</b> is a <a href="https://twoactualeyes.com" rel="noopener">Two&nbsp;Actual&nbsp;Eyes</a> tool — no ads, no nonsense. If it saved you a search, you can <a href="https://twoactualeyes.com/coffee" rel="noopener">buy&nbsp;me&nbsp;a&nbsp;coffee</a>.</p>
   </footer>
 </div>
 

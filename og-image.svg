@@ -1,0 +1,174 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g1" cx="72%" cy="-12%" r="62%">
+      <stop offset="0" stop-color="#1d1f27"/>
+      <stop offset="0.62" stop-color="#0c0d10" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="-6%" cy="112%" r="58%">
+      <stop offset="0" stop-color="#181a22"/>
+      <stop offset="0.56" stop-color="#0c0d10" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="key" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2d36"/>
+      <stop offset="1" stop-color="#191b21"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0c0d10"/>
+  <rect width="1200" height="630" fill="url(#g1)"/>
+  <rect width="1200" height="630" fill="url(#g2)"/>
+
+  <!-- decorative key grid -->
+  
+    <g opacity="0.5">
+      <rect x="670" y="129" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="704" y="163" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">★</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="766" y="129" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="800" y="163" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">→</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="862" y="129" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="896" y="163" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">❤</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="958" y="129" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="992" y="163" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">§</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="1054" y="129" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="1088" y="163" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">∞</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="670" y="225" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="704" y="259" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">♪</text>
+    </g>
+    <g opacity="1">
+      <rect x="766" y="225" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#e9b04a" stroke-width="1.5"/>
+      <text x="800" y="259" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#e9b04a" text-anchor="middle" dominant-baseline="central">µ</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="862" y="225" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="896" y="259" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">¶</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="958" y="225" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="992" y="259" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">÷</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="1054" y="225" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="1088" y="259" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">№</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="670" y="321" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="704" y="355" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">☼</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="766" y="321" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="800" y="355" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">±</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="862" y="321" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="896" y="355" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">≈</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="958" y="321" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="992" y="355" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">♫</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="1054" y="321" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="1088" y="355" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">☆</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="670" y="417" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="704" y="451" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">✓</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="766" y="417" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="800" y="451" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">π</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="862" y="417" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="896" y="451" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">∑</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="958" y="417" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="992" y="451" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">♯</text>
+    </g>
+    <g opacity="0.5">
+      <rect x="1054" y="417" width="68" height="68"
+            rx="14" fill="url(#key)" stroke="#3a3d48" stroke-width="1"/>
+      <text x="1088" y="451" font-family="DejaVu Sans, sans-serif" font-size="34"
+            fill="#9a9ba6" text-anchor="middle" dominant-baseline="central">€</text>
+    </g>
+  <rect width="1200" height="630" fill="#0c0d10" opacity="0.34"/>
+
+  <!-- logo key (echoes the favicon) -->
+  <g>
+    <rect x="80" y="150" width="84" height="84" rx="18" fill="url(#key)" stroke="#3a3d48"/>
+    <text x="122" y="196" font-family="DejaVu Sans, sans-serif" font-size="46" fill="#e9b04a"
+          text-anchor="middle" dominant-baseline="central">★</text>
+  </g>
+
+  <!-- wordmark: "Pintad" + italic amber "era" -->
+  <text x="78" y="320" font-family="Liberation Serif, Georgia, serif" font-weight="bold"
+        font-size="118" letter-spacing="-1">
+    <tspan fill="#f2efe6">Pintad</tspan><tspan fill="#e9b04a" font-style="italic">era</tspan>
+  </text>
+
+  <!-- tagline -->
+  <text x="82" y="392" font-family="DejaVu Sans Mono, monospace" font-size="30" fill="#f2efe6">
+    Click-to-copy Unicode symbols, glyphs &amp; emoji.
+  </text>
+  <text x="82" y="438" font-family="DejaVu Sans Mono, monospace" font-size="22" fill="#9a9ba6">
+    8,000+ glyphs · real per-OS preview · search by name or code point
+  </text>
+
+  <!-- credit -->
+  <text x="82" y="540" font-family="DejaVu Sans Mono, monospace" font-size="20" fill="#caa15a">
+    A Two Actual Eyes tool
+    <tspan fill="#5d5f6b">  ·  no ads, no tracking</tspan>
+  </text>
+
+  <!-- inner frame -->
+  <rect x="2" y="2" width="1196" height="626" rx="0" fill="none" stroke="#26282f" stroke-width="2"/>
+</svg>

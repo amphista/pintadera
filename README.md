@@ -1,10 +1,12 @@
-# Stream Deck Symbols
+# Pintadera
 
-A fast, free, click-to-copy picker for **8,000+ Unicode symbols and emoji** — with per-OS rendering previews so the on-screen glyph predicts how the character will actually look once you paste it. Built to load up a Stream Deck "Symbols" profile, useful anywhere you type.
+A fast, free, **ad-free** click-to-copy picker for **8,000+ Unicode symbols, glyphs and emoji** — with per-OS rendering previews so the on-screen glyph predicts how the character will actually look once you paste it. Useful anywhere you type, and it can also load up a Stream Deck "Symbols" profile.
+
+> Named after the [_pintadera_](https://en.wikipedia.org/wiki/Pintadera) — an ancient fired-clay stamp used to press a design onto a surface. A [Two Actual Eyes](https://twoactualeyes.com) tool.
 
 **Live:** _(deploy and put your URL here)_
 
-![Stream Deck Symbols](og-image.png)
+![Pintadera](og-image.png)
 
 ## What it does
 
@@ -65,13 +67,13 @@ To change which Unicode blocks are included or how they're grouped into folders,
 ### Cloudflare Pages — drag & drop
 1. Put `index.html`, `symbols-data.js` (and an `og-image.png` if you have one) in a folder.
 2. Cloudflare dashboard → **Workers & Pages → Create application → Pages → Upload assets**.
-3. Name the project (e.g. `streamdeck-symbols`), drag the folder in, **Deploy site**.
+3. Name the project (e.g. `pintadera`), drag the folder in, **Deploy site**.
 4. Live at `https://<project>.pages.dev`.
 
 ### Cloudflare Pages — Wrangler CLI
 ```bash
 npx wrangler login
-npx wrangler pages deploy . --project-name streamdeck-symbols
+npx wrangler pages deploy . --project-name pintadera
 ```
 
 ### GitHub Pages
