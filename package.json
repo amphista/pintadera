@@ -5,7 +5,7 @@
   "homepage": "https://pintadera.twoactualeyes.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amphista/streamdeck-symbols.git"
+    "url": "https://github.com/amphista/pintadera.git"
   },
   "scripts": {
     "build": "node generate-data.mjs && node make-dist.mjs",
