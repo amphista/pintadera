@@ -1,6 +1,8 @@
-# Stream Deck Symbols
+# Pintadera
 
-A fast, free, click-to-copy picker for **8,000+ Unicode symbols and emoji** — with per-OS rendering previews so the on-screen glyph predicts how the character will actually look once you paste it. Built to load up a Stream Deck "Symbols" profile, useful anywhere you type.
+A fast, free, **ad-free** click-to-copy picker for **8,000+ Unicode symbols, glyphs and emoji** — with per-OS rendering previews so the on-screen glyph predicts how the character will actually look once you paste it. Useful anywhere you type, and it can also load up a Stream Deck "Symbols" profile.
+
+> Named after the [_pintadera_](https://en.wikipedia.org/wiki/Pintadera) — an ancient fired-clay stamp used to press a design onto a surface. A [Two Actual Eyes](https://twoactualeyes.com) tool.
 
 **Live:** _(deploy and put your URL here)_
 
