@@ -8,7 +8,7 @@
     "url": "https://github.com/amphista/streamdeck-symbols.git"
   },
   "scripts": {
-    "build": "node generate-data.mjs",
+    "build": "node generate-data.mjs && node make-dist.mjs",
     "og": "node make-og-image.mjs",
     "start": "python -m http.server 8000"
   },
