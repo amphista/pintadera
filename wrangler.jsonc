@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers static-assets config. Committing this stops the
+  // Git-connected build from auto-generating one that points the asset
+  // upload at the repo root (which swept node_modules/ and hit the 25 MiB
+  // per-asset limit on workerd). We publish only the assembled dist/ folder.
+  "name": "pintadera",
+  "compatibility_date": "2026-05-30",
+  "assets": {
+    "directory": "./dist"
+  }
+}
