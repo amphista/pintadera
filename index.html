@@ -353,6 +353,13 @@
         </select>
       </div>
       <div class="ctrl">
+        <label for="dualSel">Emoji-capable glyphs (•)</label>
+        <select id="dualSel" aria-label="How to display emoji-capable (dual-nature) glyphs">
+          <option value="text">Show as text</option>
+          <option value="emoji">Show as color emoji</option>
+        </select>
+      </div>
+      <div class="ctrl">
         <label for="psize">Glyphs per page</label>
         <select id="psize" aria-label="Symbols per page">
           <option value="30">30</option>
@@ -447,6 +454,8 @@ const LS = {
   set psize(v){localStorage.setItem('sd_psize',String(v));},
   get filter(){return localStorage.getItem('sd_filter')||'all';},
   set filter(v){localStorage.setItem('sd_filter',v);},
+  get dual(){return localStorage.getItem('sd_dual')||'text';},   // emoji-capable (e:1) glyphs: 'text' | 'emoji'
+  set dual(v){localStorage.setItem('sd_dual',v);},
   get recent(){try{return JSON.parse(localStorage.getItem('sd_recent')||'[]');}catch(e){return [];}},
   set recent(a){localStorage.setItem('sd_recent',JSON.stringify(a));},
   get renderable(){return localStorage.getItem('sd_renderable');}, // 'on' | 'off' | null(=auto)
@@ -456,7 +465,7 @@ const LS = {
 };
 const state = {
   view:'home', catId:null, page:0, search:'',
-  os: LS.os, psize: LS.psize, filter: LS.filter, recent: LS.recent, onlyRenderable:false, selMode:false,
+  os: LS.os, psize: LS.psize, filter: LS.filter, dual: LS.dual, recent: LS.recent, onlyRenderable:false, selMode:false,
   selected: new Map(),  // char -> rec
 };
 // restore selection
@@ -482,7 +491,9 @@ function glyphNode(rec, opts){
   const os = state.os;
   const span=document.createElement('span');
   span.className='gly';
-  const emojiCapable = rec.e>=1 && rec.eu;
+  // true emoji (e:2) always render as emoji; dual-nature glyphs (e:1) honor the display setting
+  const asEmoji = rec.e===2 || (rec.e===1 && state.dual==='emoji');
+  const emojiCapable = asEmoji && rec.eu;
   if(emojiCapable && IMAGE_OS[os]){
     const img=document.createElement('img');
     img.src=emojiURL(rec.eu, os);
@@ -493,7 +504,7 @@ function glyphNode(rec, opts){
       img.replaceWith(s);
     },{once:true});
     span.appendChild(img);
-  } else if(rec.e>=1){
+  } else if(asEmoji){
     span.classList.add('as-emoji');
     span.textContent=emojiText(rec);
   } else {
@@ -509,8 +520,11 @@ function emojiText(rec){
 
 /* ============================== COPY ============================== */
 let toastT;
+/* what actually lands on the clipboard: in emoji mode a dual-nature glyph (e:1)
+   copies with VS16 so it pastes as a color emoji, matching the preview */
+function copyValue(rec){ return (rec.e===1 && state.dual==='emoji') ? emojiText(rec) : rec.c; }
 function copy(rec){
-  const txt=rec.c;
+  const txt=copyValue(rec);
   const done=()=>{ pushRecent(rec.c); flash(rec); };
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
@@ -998,7 +1012,7 @@ function aboutPreviewText(){
     twitter:'Previewing the <b>Twitter / X</b> emoji look (Twemoji images). Non-emoji symbols fall back to your device font.',
   };
   $('aboutPreview').innerHTML='<b>Preview accuracy.</b> '+(txt[state.os]||txt.native)+
-    ' Glyphs marked with an amber dot are text by default but turn into a color emoji in rich contexts like email — the preview shows that emoji form so there are no surprises.';
+    ' Glyphs marked with an amber dot are text by default but can also render as a color emoji in rich contexts like email — preview them either way with the “Emoji-capable glyphs” setting.';
 }
 
 /* ============================== INIT / EVENTS ============================== */
@@ -1012,6 +1026,7 @@ $('clr').addEventListener('click',()=>{ state.search=''; $('search').value=''; $
 $('os').addEventListener('change',e=>{ state.os=e.target.value; LS.os=state.os; applyOS(); render(); });
 $('psize').addEventListener('change',e=>{ state.psize=parseInt(e.target.value,10); LS.psize=state.psize; state.page=0; render(); });
 $('renderChk').addEventListener('change',e=>setOnlyRenderable(e.target.checked));
+$('dualSel').addEventListener('change',e=>{ state.dual=e.target.value; LS.dual=state.dual; render(); });
 $('selToggle').addEventListener('click',()=>{ setSelMode(!state.selMode); if(state.selMode){live.textContent='Select mode on — click glyphs to add them to your export.';} });
 
 /* collapsible intro */
@@ -1030,7 +1045,7 @@ $('settingsBtn').addEventListener('click',e=>{ e.stopPropagation();
 $('settingsPop').addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('click',()=>{ if($('settingsPop').classList.contains('show')) openSettings(false); });
 $('trayClear').addEventListener('click',()=>{ state.selected.clear(); persistSel(); updateTray(); render(); });
-$('trayCopy').addEventListener('click',()=>{ if(!state.selected.size) return; copyText([...state.selected.keys()].join(''), state.selected.size); });
+$('trayCopy').addEventListener('click',()=>{ if(!state.selected.size) return; copyText([...state.selected.values()].map(copyValue).join(''), state.selected.size); });
 $('trayExport').addEventListener('click',goExport);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.view==='export'){ state.view='home'; render(); } else if($('settingsPop').classList.contains('show')){openSettings(false); $('settingsBtn').focus();} else if(state.search){clearSearch(); $('search').focus();} }
   if(e.key==='/'&&document.activeElement!==$('search')&&!/input|textarea/i.test(document.activeElement.tagName)){ e.preventDefault(); $('search').focus(); } });
@@ -1040,7 +1055,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.view==='
   $('stat').innerHTML=`<b>${(m.total||INDEX.length).toLocaleString()}</b> glyphs<br>${(m.symbolTotal||0).toLocaleString()} symbols · ${(m.emojiTotal||0).toLocaleString()} emoji`; })();
 
 // boot
-$('os').value=state.os; $('psize').value=String(state.psize);
+$('os').value=state.os; $('psize').value=String(state.psize); $('dualSel').value=state.dual;
 initDetect();
 { const savedR=LS.renderable; state.onlyRenderable = savedR!=null ? (savedR==='on') : deviceLacksCoverage(); }
 $('renderChk').checked=state.onlyRenderable;
