@@ -177,19 +177,43 @@
   .key.selected .selmark{background:var(--sel);border-color:var(--sel)}
   .key.selected .selmark::before{content:"✓"}
 
-  /* folder key */
-  .key.folder{justify-content:space-between;align-items:stretch;padding:11px 10px 9px;cursor:pointer}
-  .key.folder .fg{flex:1;display:flex;align-items:center;justify-content:center;font-family:var(--sym);
+  /* folder key — name sits INSIDE the square tile and wraps (up to 2 lines) when long */
+  .key.folder{justify-content:space-between;align-items:stretch;padding:9px 6px 7px;gap:4px;cursor:pointer}
+  .key.folder .fg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-family:var(--sym);
     font-size:clamp(19px,2.8vw,28px);color:var(--amber-soft)}
   .key.folder.is-emoji .fg{font-family:var(--emo);color:var(--ink)}
-  .key.folder .lbl{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);
-    text-align:center;line-height:1.25;font-weight:500}
+  .key.folder .lbl{font-size:9px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-dim);
+    text-align:center;line-height:1.2;font-weight:500;overflow-wrap:anywhere;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .key.folder .cnt{position:absolute;top:6px;right:8px;font-size:8px;color:var(--ink-faint);letter-spacing:.02em}
   .key.folder::before{content:"";position:absolute;top:6px;left:8px;width:14px;height:11px;
     background:var(--ink-faint);opacity:.6;
     -webkit-mask:var(--folder-ico) center/contain no-repeat;mask:var(--folder-ico) center/contain no-repeat}
   .key.folder.useful::before{background:var(--amber);opacity:.9}
   .key.folder.useful .fg{color:var(--amber)}
+
+  /* filter chips + dual-nature legend */
+  .filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 2px 2px}
+  .filters .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--bg-1)}
+  .filters .seg button{background:none;border:0;color:var(--ink-dim);font-family:var(--mono);font-size:11px;
+    padding:7px 11px;cursor:pointer;letter-spacing:.03em;transition:background .15s,color .15s;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .filters .seg button:hover{color:var(--ink)}
+  .filters .seg button[aria-pressed=true]{background:rgba(233,176,74,.14);color:var(--amber)}
+  .filters .d{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber-soft);opacity:.7}
+  .filters .legend{font-size:10.5px;color:var(--ink-faint);letter-spacing:.02em;margin-left:auto;display:flex;align-items:center;gap:6px}
+  .filters .chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-1);border:1px solid var(--line);
+    color:var(--ink-dim);border-radius:9px;padding:7px 11px;font-family:var(--mono);font-size:11px;letter-spacing:.03em;
+    cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+  .filters .chip:hover{border-color:var(--amber-soft);color:var(--ink)}
+  .filters .chip .ck{opacity:0;font-family:var(--sym);font-size:12px;line-height:1}
+  .filters .chip[aria-pressed=true]{background:rgba(233,176,74,.14);border-color:var(--amber);color:var(--amber)}
+  .filters .chip[aria-pressed=true] .ck{opacity:1}
+  .pop .ctrl.chk{flex-direction:row;align-items:flex-start;gap:9px}
+  .pop .ctrl.chk label{display:flex;align-items:flex-start;gap:9px;cursor:pointer;color:var(--ink-dim);
+    text-transform:none;letter-spacing:.01em;font-size:12px;line-height:1.4}
+  .pop .ctrl.chk input{margin-top:1px;width:15px;height:15px;accent-color:var(--amber);flex:none;cursor:pointer}
+  @media(max-width:560px){.filters .legend{margin-left:0;flex-basis:100%}}
 
   /* category header */
   .catbar{display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap}
@@ -329,13 +353,23 @@
         </select>
       </div>
       <div class="ctrl">
+        <label for="dualSel">Emoji-capable glyphs (•)</label>
+        <select id="dualSel" aria-label="How to display emoji-capable (dual-nature) glyphs">
+          <option value="text">Show as text</option>
+          <option value="emoji">Show as color emoji</option>
+        </select>
+      </div>
+      <div class="ctrl">
         <label for="psize">Glyphs per page</label>
         <select id="psize" aria-label="Symbols per page">
-          <option value="30">30 · XL page</option>
+          <option value="30">30</option>
           <option value="60">60</option>
           <option value="120">120</option>
           <option value="100000">All</option>
         </select>
+      </div>
+      <div class="ctrl chk">
+        <label><input type="checkbox" id="renderChk"> Only show glyphs this device can display</label>
       </div>
     </div>
   </div>
@@ -356,34 +390,8 @@
   <span class="tcount"><b id="trayN">0</b> selected</span>
   <span class="tprev" id="trayPrev" aria-hidden="true"></span>
   <button class="t" id="trayClear" type="button">Clear</button>
-  <button class="t primary" id="trayExport" type="button">Export ▸</button>
-</div>
-
-<!-- export modal -->
-<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="modal">
-    <h2 id="modalTitle">Export for Stream Deck</h2>
-    <p class="msub" id="modalSub"></p>
-    <div class="mrow">
-      <label for="kpp">Keys / page</label>
-      <input type="number" id="kpp" min="1" max="30" value="30">
-      <span style="color:var(--ink-faint);font-size:11px">XL = 32 keys, 2 reserved for Back + Next ⟶ max 30</span>
-    </div>
-    <div class="mrow">
-      <label>Format</label>
-      <div class="seg" id="fmtSeg" role="tablist" aria-label="Export format">
-        <button role="tab" aria-selected="true" data-fmt="prompt">Claude Code prompt</button>
-        <button role="tab" aria-selected="false" data-fmt="json">JSON only</button>
-      </div>
-    </div>
-    <textarea id="exportText" readonly spellcheck="false" aria-label="Export output"></textarea>
-    <div class="mfoot">
-      <button class="mb primary" id="copyExport" type="button">Copy to clipboard</button>
-      <button class="mb" id="dlExport" type="button">Download .json</button>
-      <span class="sp"></span>
-      <button class="mb ghost" id="closeModal" type="button">Close</button>
-    </div>
-  </div>
+  <button class="t primary" id="trayCopy" type="button">Copy all</button>
+  <button class="t" id="trayExport" type="button">Export ▸</button>
 </div>
 
 <div class="toast" id="toast" role="status"><span class="big" id="toastGly"></span><span><b>copied</b> <span id="toastTxt" class="nm"></span></span></div>
@@ -444,12 +452,20 @@ const LS = {
   set os(v){localStorage.setItem('sd_os',v);},
   get psize(){return parseInt(localStorage.getItem('sd_psize')||'30',10);},
   set psize(v){localStorage.setItem('sd_psize',String(v));},
+  get filter(){return localStorage.getItem('sd_filter')||'all';},
+  set filter(v){localStorage.setItem('sd_filter',v);},
+  get dual(){return localStorage.getItem('sd_dual')||'text';},   // emoji-capable (e:1) glyphs: 'text' | 'emoji'
+  set dual(v){localStorage.setItem('sd_dual',v);},
+  get recent(){try{return JSON.parse(localStorage.getItem('sd_recent')||'[]');}catch(e){return [];}},
+  set recent(a){localStorage.setItem('sd_recent',JSON.stringify(a));},
+  get renderable(){return localStorage.getItem('sd_renderable');}, // 'on' | 'off' | null(=auto)
+  set renderable(v){ if(v==null) localStorage.removeItem('sd_renderable'); else localStorage.setItem('sd_renderable',v); },
   get sel(){try{return JSON.parse(localStorage.getItem('sd_sel')||'[]');}catch(e){return [];}},
   set sel(arr){localStorage.setItem('sd_sel',JSON.stringify(arr));},
 };
 const state = {
   view:'home', catId:null, page:0, search:'',
-  os: LS.os, psize: LS.psize, selMode:false,
+  os: LS.os, psize: LS.psize, filter: LS.filter, dual: LS.dual, recent: LS.recent, onlyRenderable:false, selMode:false,
   selected: new Map(),  // char -> rec
 };
 // restore selection
@@ -475,7 +491,9 @@ function glyphNode(rec, opts){
   const os = state.os;
   const span=document.createElement('span');
   span.className='gly';
-  const emojiCapable = rec.e>=1 && rec.eu;
+  // true emoji (e:2) always render as emoji; dual-nature glyphs (e:1) honor the display setting
+  const asEmoji = rec.e===2 || (rec.e===1 && state.dual==='emoji');
+  const emojiCapable = asEmoji && rec.eu;
   if(emojiCapable && IMAGE_OS[os]){
     const img=document.createElement('img');
     img.src=emojiURL(rec.eu, os);
@@ -486,7 +504,7 @@ function glyphNode(rec, opts){
       img.replaceWith(s);
     },{once:true});
     span.appendChild(img);
-  } else if(rec.e>=1){
+  } else if(asEmoji){
     span.classList.add('as-emoji');
     span.textContent=emojiText(rec);
   } else {
@@ -502,9 +520,12 @@ function emojiText(rec){
 
 /* ============================== COPY ============================== */
 let toastT;
+/* what actually lands on the clipboard: in emoji mode a dual-nature glyph (e:1)
+   copies with VS16 so it pastes as a color emoji, matching the preview */
+function copyValue(rec){ return (rec.e===1 && state.dual==='emoji') ? emojiText(rec) : rec.c; }
 function copy(rec){
-  const txt=rec.c;
-  const done=()=>flash(rec);
+  const txt=copyValue(rec);
+  const done=()=>{ pushRecent(rec.c); flash(rec); };
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
   } else fallbackCopy(txt,done);
@@ -525,6 +546,24 @@ function flash(rec){
 }
 function titleName(rec){ return `${rec.n} (U+${rec.u.toUpperCase().replace(/-/g,' U+')})`; }
 function ariaLabel(rec){ return `Copy ${rec.c} — ${rec.n}, U+${rec.u.toUpperCase()}`; }
+/* copy many glyphs at once (selection tray) */
+function copyText(txt,n){
+  const done=()=>flashText(n);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  } else fallbackCopy(txt,done);
+}
+function flashText(n){
+  const t=$('toast'), g=$('toastGly'); g.className='big'; g.textContent='✓';
+  $('toastTxt').textContent = n+' glyph'+(n===1?'':'s');
+  t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1500);
+  live.textContent = `Copied ${n} glyph${n===1?'':'s'} to clipboard`;
+}
+/* recently-copied history (chars, most-recent-first) */
+function pushRecent(c){
+  const arr=state.recent.filter(x=>x!==c); arr.unshift(c); if(arr.length>60) arr.length=60;
+  state.recent=arr; LS.recent=arr;
+}
 
 /* ============================== KEY BUILDERS ============================== */
 function symKey(rec){
@@ -597,7 +636,105 @@ function bindGrid(g){
 /* ============================== VIEWS ============================== */
 function getFolder(id){
   if(id==='useful') return USEFUL;
+  if(id==='recent') return recentFolder();
+  if(id==='all') return allFolder();
   return SYM_FOLDERS.find(f=>f.id===id) || EMO_FOLDERS.find(f=>f.id===id);
+}
+function recentFolder(){
+  const items=state.recent.map(c=>CHARMAP.get(c)).filter(Boolean);
+  return {id:'recent', label:'Recent', glyph:'⟲', items};
+}
+let _allItems=null;
+function allFolder(){
+  if(!_allItems) _allItems=[...CHARMAP.values()]; // every glyph, deduped, already folder-tagged
+  return {id:'all', label:'All Glyphs', glyph:'∗', items:_allItems};
+}
+/* glyph-type filter (All / Symbols / Emoji / Emoji-capable) */
+const FILTERS=[
+  {id:'all',label:'All'},
+  {id:'sym',label:'Symbols'},
+  {id:'emoji',label:'Emoji'},
+  {id:'capable',label:'Emoji-capable',dot:true},
+];
+/* ---- device glyph-coverage detection (hide tofu / .notdef boxes) ----
+   Draws each glyph in the DEVICE's native font stack and compares it to the
+   system .notdef box; a match (or a blank draw) means the device can't show it. */
+let SYM_STACK='sans-serif', EMO_STACK='sans-serif', _cx=null, _refSym=null, _refEmo=null;
+const SUPP_CACHE=new Map();
+function initDetect(){
+  try{
+    const cv=document.createElement('canvas'); cv.width=28; cv.height=30;
+    _cx=cv.getContext('2d',{willReadFrequently:true});
+    const cs=getComputedStyle(document.documentElement);
+    SYM_STACK=(cs.getPropertyValue('--native-sym').trim())||'sans-serif';
+    EMO_STACK=(cs.getPropertyValue('--native-emo').trim())||'sans-serif';
+    const nd=String.fromCodePoint(0x10FFFF); // guaranteed-unassigned → .notdef
+    _refSym=glyphBox(nd,SYM_STACK); _refEmo=glyphBox(nd,EMO_STACK);
+  }catch(e){ _cx=null; }
+}
+function glyphBox(txt,stack){
+  _cx.clearRect(0,0,28,30); _cx.font='20px '+stack; _cx.textBaseline='top'; _cx.fillStyle='#fff';
+  _cx.fillText(txt,2,3);
+  return { w:_cx.measureText(txt).width, data:_cx.getImageData(0,0,28,30).data };
+}
+function alphaOn(d){ let n=0; for(let i=3;i<d.length;i+=4) if(d[i]>16) n++; return n; }
+function boxSim(a,b){ let s=0,t=0; for(let i=3;i<a.length;i+=4){ t++; if((a[i]>16)===(b[i]>16)) s++; } return s/t; }
+function isRenderable(rec){
+  if(!_cx) return true;
+  const ch=rec.c; if(SUPP_CACHE.has(ch)) return SUPP_CACHE.get(ch);
+  let ok=true;
+  try{
+    const emoji=rec.e>=1;
+    const cur=glyphBox(emoji?emojiText(rec):ch, emoji?EMO_STACK:SYM_STACK);
+    const ref=emoji?_refEmo:_refSym;
+    if(alphaOn(cur.data)===0) ok=false;                                          // nothing drawn at all
+    // a missing glyph renders the font's single .notdef box → pixel-identical to the reference box.
+    // require near-identical (not just "similar"): a real but sparse glyph like π shares most of the
+    // empty background with the box (~0.84) but is never ~identical, so it must NOT be hidden.
+    else if(Math.abs(cur.w-ref.w)<0.75 && boxSim(cur.data,ref.data)>0.985) ok=false;
+  }catch(e){ ok=true; }
+  SUPP_CACHE.set(ch,ok); return ok;
+}
+/* sample the set; if a big share is tofu (e.g. iOS), default the filter on */
+function deviceLacksCoverage(){
+  if(!_cx) return false;
+  let miss=0,tot=0; const step=Math.max(1,Math.floor(INDEX.length/280));
+  for(let i=0;i<INDEX.length;i+=step){ tot++; if(!isRenderable(INDEX[i])) miss++; }
+  return tot>0 && miss/tot>0.12;
+}
+function setOnlyRenderable(on){ state.onlyRenderable=on; LS.renderable=on?'on':'off'; state.page=0;
+  const cb=$('renderChk'); if(cb) cb.checked=on; render(); }
+function passFilter(rec){
+  if(state.onlyRenderable && !isRenderable(rec)) return false;
+  switch(state.filter){
+    case 'sym': return rec.e!==2;
+    case 'emoji': return rec.e===2;
+    case 'capable': return rec.e===1;
+    default: return true;
+  }
+}
+function filterBar(){
+  const wrap=document.createElement('div'); wrap.className='filters';
+  const seg=document.createElement('div'); seg.className='seg';
+  seg.setAttribute('role','group'); seg.setAttribute('aria-label','Filter by glyph type');
+  FILTERS.forEach(ft=>{
+    const b=document.createElement('button'); b.type='button';
+    b.setAttribute('aria-pressed',String(state.filter===ft.id));
+    b.innerHTML=(ft.dot?'<span class="d" aria-hidden="true"></span>':'')+ft.label;
+    b.addEventListener('click',()=>{ state.filter=ft.id; LS.filter=ft.id; state.page=0; render(); });
+    seg.appendChild(b);
+  });
+  wrap.appendChild(seg);
+  const chip=document.createElement('button'); chip.type='button'; chip.className='chip';
+  chip.setAttribute('aria-pressed',String(state.onlyRenderable));
+  chip.title='Hide glyphs your device can’t display (tofu boxes)';
+  chip.innerHTML='<span class="ck" aria-hidden="true">✓</span>Renders here';
+  chip.addEventListener('click',()=>setOnlyRenderable(!state.onlyRenderable));
+  wrap.appendChild(chip);
+  const leg=document.createElement('span'); leg.className='legend';
+  leg.innerHTML='<span class="d" aria-hidden="true"></span>text by default, also a color emoji (© → ©️)';
+  wrap.appendChild(leg);
+  return wrap;
 }
 function render(){
   stage.innerHTML=''; setCrumbs();
@@ -605,10 +742,14 @@ function render(){
   if(state.view==='home') return renderHome();
   if(state.view==='emoji') return renderEmojiHome();
   if(state.view==='cat') return renderCat();
+  if(state.view==='export') return renderExport();
 }
 function renderHome(){
   const g=makeGrid();
+  const allN=(DATA.meta&&DATA.meta.total)||CHARMAP.size;
+  g.appendChild(folderKey({id:'all',label:'All Glyphs',glyph:'∗',count:allN,sub:'everything'}, false, ()=>open('all')));
   g.appendChild(folderKey(Object.assign({sub:'top picks'},USEFUL), false, ()=>open('useful')));
+  if(state.recent.length) g.appendChild(folderKey({id:'recent',label:'Recent',glyph:'⟲',count:state.recent.length,sub:'recently copied'}, false, ()=>open('recent')));
   SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id))));
   const emCount=EMO_FOLDERS.reduce((n,f)=>n+f.items.length,0);
   g.appendChild(folderKey({id:'emoji',label:'Emoji',glyph:'😊',count:EMO_FOLDERS.length,sub:'sets'},true,()=>{state.view='emoji';state.page=0;render();}));
@@ -623,18 +764,25 @@ function renderEmojiHome(){
 function renderCat(){
   const f=getFolder(state.catId); if(!f){state.view='home';return render();}
   const isEmoji=EMO_FOLDERS.some(x=>x.id===f.id);
-  const per=state.psize, pages=Math.max(1,Math.ceil(f.items.length/per));
+  const items=f.items.filter(passFilter);
+  // safety cap: never build more than this many keys in one page — mobile (iPhone)
+  // freezes trying to paint the full ~8k "All Glyphs" set at once. Folders all fit under it.
+  const RENDER_CAP=1000;
+  const per=Math.min(state.psize,RENDER_CAP), pages=Math.max(1,Math.ceil(items.length/per));
   if(state.page>=pages) state.page=0;
   const back=()=>{ if(isEmoji){state.view='emoji';} else {state.view='home';} state.catId=null; render(); };
-  bar(f.label, `${f.items.length} glyphs · ${pages>1?('page '+(state.page+1)+' / '+pages):'1 page'}`, back, isEmoji);
-  if(pages>1) stage.appendChild(pager(pages,f.items.length,true)); // top pager: stays in view after scroll-to-top
-  const start=state.page*per, slice=f.items.slice(start,start+per);
+  bar(f.label, `${items.length} glyph${items.length===1?'':'s'}${(state.filter!=='all'||state.onlyRenderable)?' · filtered':''} · ${pages>1?('page '+(state.page+1)+' / '+pages):'1 page'}`, back, isEmoji);
+  stage.appendChild(filterBar());
+  if(pages>1) stage.appendChild(pager(pages,items.length,true)); // top pager: stays in view after scroll-to-top
+  if(!items.length){ const e=document.createElement('div'); e.className='empty';
+    e.textContent='No glyphs in this folder match that filter.'; stage.appendChild(e); return; }
+  const start=state.page*per, slice=items.slice(start,start+per);
   const g=makeGrid();
   slice.forEach(it=>{ // tag with THIS folder so export grouping matches where the glyph was picked
-    const rec=Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
+    const rec = (f.id==='recent'||f.id==='all') ? it : Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
     g.appendChild(symKey(rec)); });
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
-  if(pages>1) stage.appendChild(pager(pages,f.items.length));
+  if(pages>1) stage.appendChild(pager(pages,items.length));
 }
 function renderSearch(qraw){
   const q=qraw.toLowerCase();
@@ -643,6 +791,7 @@ function renderSearch(qraw){
   const hits=[]; const seen=new Set(); const LIMIT=600;
   for(const rec of INDEX){
     if(seen.has(rec.c)) continue;
+    if(!passFilter(rec)) continue;
     let m=false;
     if(isCp){ m = rec.u===cpQuery || rec.u.split('-').includes(cpQuery); }
     else {
@@ -654,6 +803,7 @@ function renderSearch(qraw){
   }
   bar(`“${qraw}”`, hits.length+(hits.length>=LIMIT?'+':'')+' result'+(hits.length===1?'':'s'),
       ()=>{ clearSearch(); }, false);
+  stage.appendChild(filterBar());
   live.textContent = `${hits.length} ${hits.length===1?'result':'results'} for ${qraw}`;
   if(!hits.length){
     const e=document.createElement('div'); e.className='empty';
@@ -796,20 +946,54 @@ Export JSON:
 `;
 function buildPrompt(kpp){ return PROMPT_HEAD + JSON.stringify(buildExportJSON(kpp),null,2); }
 
-/* modal wiring */
+/* ---------- export PAGE (its own view, not a modal) ----------
+   Minimal split for now; the full Stream Deck layout builder (deck-model
+   picker + visual preview) lands here in a later pass. */
 let curFmt='prompt';
 function refreshExport(){
+  if(!$('kpp')) return;
   const kpp=Math.max(1,Math.min(30,parseInt($('kpp').value,10)||30));
   const json=buildExportJSON(kpp);
   $('exportText').value = curFmt==='prompt' ? buildPrompt(kpp) : JSON.stringify(json,null,2);
   $('modalSub').textContent =
     `${json.totals.symbolCount} glyphs across ${json.totals.folderCount} folder${json.totals.folderCount===1?'':'s'} → ${json.totals.pageCount} Stream Deck page${json.totals.pageCount===1?'':'s'} at ${kpp}/page.`;
 }
-function openModal(){
-  if(!state.selected.size) return;
-  $('modalBg').classList.add('show'); refreshExport(); $('closeModal').focus();
+function goExport(){ if(!state.selected.size) return; state.view='export'; render(); window.scrollTo({top:0}); }
+function renderExport(){
+  if(!state.selected.size){ state.view='home'; return render(); }
+  bar('Stream Deck export', `${state.selected.size} glyph${state.selected.size===1?'':'s'} selected`,
+      ()=>{ state.view='home'; render(); });
+  const panel=document.createElement('div'); panel.className='modal expage';
+  panel.innerHTML=`
+    <p class="msub" id="modalSub"></p>
+    <div class="mrow">
+      <label for="kpp">Keys / page</label>
+      <input type="number" id="kpp" min="1" max="30" value="30">
+      <span style="color:var(--ink-faint);font-size:11px">Stream Deck XL = 32 keys, 2 reserved for Back + Next → max 30</span>
+    </div>
+    <div class="mrow">
+      <label>Format</label>
+      <div class="seg" id="fmtSeg" role="tablist" aria-label="Export format">
+        <button role="tab" data-fmt="prompt">Claude Code prompt</button>
+        <button role="tab" data-fmt="json">JSON only</button>
+      </div>
+    </div>
+    <textarea id="exportText" readonly spellcheck="false" aria-label="Export output"></textarea>
+    <div class="mfoot">
+      <button class="mb primary" id="copyExport" type="button">Copy to clipboard</button>
+      <button class="mb" id="dlExport" type="button">Download .json</button>
+    </div>`;
+  stage.appendChild(panel);
+  [...$('fmtSeg').children].forEach(c=>c.setAttribute('aria-selected',String(c.dataset.fmt===curFmt)));
+  $('kpp').addEventListener('input',refreshExport);
+  $('fmtSeg').addEventListener('click',e=>{ const b=e.target.closest('[data-fmt]'); if(!b)return;
+    curFmt=b.dataset.fmt; [...$('fmtSeg').children].forEach(c=>c.setAttribute('aria-selected',String(c===b))); refreshExport(); });
+  $('copyExport').addEventListener('click',()=>{ const v=$('exportText').value;
+    (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>{ $('copyExport').textContent='Copied ✓'; setTimeout(()=>$('copyExport').textContent='Copy to clipboard',1400);}).catch(()=>{ $('exportText').select(); document.execCommand('copy'); }); });
+  $('dlExport').addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(buildExportJSON(parseInt($('kpp').value,10)||30),null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='symbols-profile.json'; a.click(); URL.revokeObjectURL(a.href); });
+  refreshExport();
 }
-function closeModal(){ $('modalBg').classList.remove('show'); }
 
 /* ============================== OS + FONT WIRING ============================== */
 function applyOS(){
@@ -831,7 +1015,7 @@ function aboutPreviewText(){
     twitter:'Previewing the <b>Twitter / X</b> emoji look (Twemoji images). Non-emoji symbols fall back to your device font.',
   };
   $('aboutPreview').innerHTML='<b>Preview accuracy.</b> '+(txt[state.os]||txt.native)+
-    ' Glyphs marked with an amber dot are text by default but turn into a color emoji in rich contexts like email — the preview shows that emoji form so there are no surprises.';
+    ' Glyphs marked with an amber dot are text by default but can also render as a color emoji in rich contexts like email — preview them either way with the “Emoji-capable glyphs” setting.';
 }
 
 /* ============================== INIT / EVENTS ============================== */
@@ -844,6 +1028,8 @@ $('search').addEventListener('input',e=>{
 $('clr').addEventListener('click',()=>{ state.search=''; $('search').value=''; $('clr').style.display='none'; $('search').focus(); render(); });
 $('os').addEventListener('change',e=>{ state.os=e.target.value; LS.os=state.os; applyOS(); render(); });
 $('psize').addEventListener('change',e=>{ state.psize=parseInt(e.target.value,10); LS.psize=state.psize; state.page=0; render(); });
+$('renderChk').addEventListener('change',e=>setOnlyRenderable(e.target.checked));
+$('dualSel').addEventListener('change',e=>{ state.dual=e.target.value; LS.dual=state.dual; render(); });
 $('selToggle').addEventListener('click',()=>{ setSelMode(!state.selMode); if(state.selMode){live.textContent='Select mode on — click glyphs to add them to your export.';} });
 
 /* collapsible intro */
@@ -862,17 +1048,9 @@ $('settingsBtn').addEventListener('click',e=>{ e.stopPropagation();
 $('settingsPop').addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('click',()=>{ if($('settingsPop').classList.contains('show')) openSettings(false); });
 $('trayClear').addEventListener('click',()=>{ state.selected.clear(); persistSel(); updateTray(); render(); });
-$('trayExport').addEventListener('click',openModal);
-$('closeModal').addEventListener('click',closeModal);
-$('modalBg').addEventListener('click',e=>{ if(e.target===$('modalBg')) closeModal(); });
-$('kpp').addEventListener('input',refreshExport);
-$('fmtSeg').addEventListener('click',e=>{ const b=e.target.closest('[data-fmt]'); if(!b)return;
-  curFmt=b.dataset.fmt; [...$('fmtSeg').children].forEach(c=>c.setAttribute('aria-selected',String(c===b))); refreshExport(); });
-$('copyExport').addEventListener('click',()=>{ const v=$('exportText').value;
-  (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>{ $('copyExport').textContent='Copied ✓'; setTimeout(()=>$('copyExport').textContent='Copy to clipboard',1400);}).catch(()=>{ $('exportText').select(); document.execCommand('copy'); }); });
-$('dlExport').addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(buildExportJSON(parseInt($('kpp').value,10)||30),null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='symbols-profile.json'; a.click(); URL.revokeObjectURL(a.href); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if($('modalBg').classList.contains('show')) closeModal(); else if($('settingsPop').classList.contains('show')){openSettings(false); $('settingsBtn').focus();} else if(state.search){clearSearch(); $('search').focus();} }
+$('trayCopy').addEventListener('click',()=>{ if(!state.selected.size) return; copyText([...state.selected.values()].map(copyValue).join(''), state.selected.size); });
+$('trayExport').addEventListener('click',goExport);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.view==='export'){ state.view='home'; render(); } else if($('settingsPop').classList.contains('show')){openSettings(false); $('settingsBtn').focus();} else if(state.search){clearSearch(); $('search').focus();} }
   if(e.key==='/'&&document.activeElement!==$('search')&&!/input|textarea/i.test(document.activeElement.tagName)){ e.preventDefault(); $('search').focus(); } });
 
 // stat line
@@ -880,7 +1058,10 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if($('modalBg').c
   $('stat').innerHTML=`<b>${(m.total||INDEX.length).toLocaleString()}</b> glyphs<br>${(m.symbolTotal||0).toLocaleString()} symbols · ${(m.emojiTotal||0).toLocaleString()} emoji`; })();
 
 // boot
-$('os').value=state.os; $('psize').value=String(state.psize);
+$('os').value=state.os; $('psize').value=String(state.psize); $('dualSel').value=state.dual;
+initDetect();
+{ const savedR=LS.renderable; state.onlyRenderable = savedR!=null ? (savedR==='on') : deviceLacksCoverage(); }
+$('renderChk').checked=state.onlyRenderable;
 applyOS(); updateTray(); render();
 </script>
 </body>
