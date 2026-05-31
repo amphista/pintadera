@@ -688,7 +688,10 @@ function isRenderable(rec){
     const cur=glyphBox(emoji?emojiText(rec):ch, emoji?EMO_STACK:SYM_STACK);
     const ref=emoji?_refEmo:_refSym;
     if(alphaOn(cur.data)===0) ok=false;                                          // nothing drawn at all
-    else if(Math.abs(cur.w-ref.w)<0.75 && boxSim(cur.data,ref.data)>0.86) ok=false; // same advance + shape as a .notdef box
+    // a missing glyph renders the font's single .notdef box → pixel-identical to the reference box.
+    // require near-identical (not just "similar"): a real but sparse glyph like π shares most of the
+    // empty background with the box (~0.84) but is never ~identical, so it must NOT be hidden.
+    else if(Math.abs(cur.w-ref.w)<0.75 && boxSim(cur.data,ref.data)>0.985) ok=false;
   }catch(e){ ok=true; }
   SUPP_CACHE.set(ch,ok); return ok;
 }
