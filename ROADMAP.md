@@ -10,22 +10,68 @@
 
 ---
 
-## Phase 0 — Ship the in-flight polish *(in progress)*
+## Phase 0 — Ship the in-flight polish *(done — PR #5 merged 2026-08-25)*
 
-Uncommitted on `mobile-ux`: "Show glyph names on keys" setting (caption shows descriptive name instead of U+ hex, always-visible clamped mode, native tooltip) + mobile chrome folding (crumbs hidden, single scrollable filter row with edge-fade).
+Shipped from `mobile-ux`: "Show glyph names on keys" setting (caption shows descriptive name instead of U+ hex, always-visible clamped mode, native tooltip) + mobile chrome folding (crumbs hidden, single scrollable filter row with edge-fade).
 
 | Session | Work | Model |
 |---|---|---|
-| 0.1 | QA in browser (esp. name captions on small screens, filter-row scroll), fix nits, commit, PR to main | **Sonnet 5** |
+| 0.1 | ~~QA in browser, fix nits, commit, PR to main~~ — **done** | **Sonnet 5** |
 
 ## Phase 1 — Filtering completion & data
 
 | Session | Work | Model |
 |---|---|---|
-| 1.1 | **Skin-tone data rebuild** — extend `generate-data.mjs` to emit skin-tone variant data into the record shape (`{c,n,u,e?,eu?,k?}` has none today); decide encoding, regenerate `symbols-data.js`, verify size impact | **Opus 5** |
+| 1.1 | ~~**Skin-tone data rebuild**~~ — **done.** Encoding decided + `symbols-data.js` regenerated; see *Skin-tone encoding* below | **Opus 5** |
 | 1.2 | **Skin-tone selector UI** — picker on emoji keys that support modifiers; respects dual-nature text/emoji setting | **Sonnet 5** |
 | 1.3 | **Manual favorites** — star glyphs into a Favorites folder (localStorage, like Recent) | **Sonnet 5** |
 | 1.4 | **Dim all-tofu folders** — folders whose glyphs all fail the render check get dimmed on home | **Haiku 4.5** |
+
+### Skin-tone encoding (decided in 1.1 — read before starting 1.2)
+
+Records gained two optional fields. Anything without skin variations is **byte-identical**
+to before, so nothing else has to change.
+
+| Field | On | Meaning |
+|---|---|---|
+| `s: 1` | 316 glyphs | Variants are **derivable** — compute them client-side |
+| `sv: {key: unified}` | 13 glyphs | Variants are **listed explicitly** — 25 entries each |
+
+**A record never has both**, so 1.2 needs no fallback chain:
+
+```js
+const variants = rec.sv                       // explicit table? use it
+  ?? (rec.s ? Object.fromEntries(SD_DATA.meta.skinTones.map(t => [t, tone(rec.eu, t)])) : null);
+
+// the whole derivation rule:
+function tone(eu, t) {
+  const cps = eu.split('-'), rest = cps.slice(1);
+  if (rest[0] === 'fe0f') rest.shift();  // modifier replaces the presentation selector
+  return [cps[0], t, ...rest].join('-');
+}
+```
+
+The five tone codes are in `SD_DATA.meta.skinTones`. A variant's value is a `unified` string
+that drops straight into the existing `emojiURL(eu, os)`, and `unified → char` is the usual
+`split('-').map(h => String.fromCodePoint(parseInt(h,16))).join('')`.
+
+**Why hybrid and not one or the other.** Measured against the 543.8 KB baseline:
+derive-everything +1.6 KB, full explicit table +66.7 KB, hybrid **+20.3 KB (+3.7%)**.
+Derive-everything is *not* safe: 310 emoji have one modifier base at codepoint index 0 and
+derive perfectly (verified 1,550/1,550), but 13 multi-person emoji take per-person tones and
+break the rule three different ways — e.g. 🤝 `1f91d` with tones `1f3fb-1f3fc` becomes
+`1faf1-1f3fb-200d-1faf2-1f3fc` (🫱🏻‍🫲🏼), an entirely different codepoint sequence.
+Deriving those would emit non-RGI sequences that render as tofu or as two glyphs. The full
+table costs 4× the hybrid for no extra information. The generator **throws** if a
+supposedly-derivable emoji ever stops deriving, so an `emoji-datasource` bump fails the
+build loudly instead of shipping broken glyphs.
+
+Those 13 are the multi-person ones (couples, holding hands, handshake). The 5-tone picker
+1.2 is scoped for covers the `s: 1` majority; a 25-combination UI for the `sv` glyphs is a
+1.2 design call, and the data is there either way.
+
+> Note: the six hand glyphs that appear in both an emoji folder and Dingbats (☝ ⛹ ✊ ✋ ✌ ✍) carry the
+> same skin fields in both places, so the picker behaves consistently wherever it's opened.
 
 ## Phase 2 — Stream Deck page → real builder
 
