@@ -450,11 +450,16 @@ const USEFUL = DATA.useful;
    Two record shapes, never both (see ROADMAP "Skin-tone encoding"):
      rec.s===1        -> derive the 5 variants client-side from rec.eu
      rec.sv[toneKey]  -> explicit 25-entry table for the 13 multi-person emoji
-   The SAME-tone entries in `sv` use a single 5-hex key (e.g. "1f3fd") — a
-   lone modifier after a multi-person base already applies uniformly to
-   everyone per the Unicode spec, so that's what the uniform 5-swatch picker
-   below reads. The 20 two-different-tone combinations (per-person tones)
-   are not surfaced by this picker — see the 1.2 commit message. */
+   The uniform-tone entry in `sv` is keyed two different ways depending on
+   how many modifier bases the base sequence has: a single-codepoint-base
+   pair (e.g. handshake, 1f91d) uses one 5-hex key ("1f3fd"); a base that
+   already contains multiple modifier-base codepoints (e.g. people holding
+   hands, or any heart/kiss couple) has no single-hex keys at all — its
+   uniform tone is the joined same-tone key ("1f3fd-1f3fd") instead. The
+   5-swatch picker below tries the single key first and falls back to the
+   joined one, so it works for both shapes. The 20 two-*different*-tone
+   combinations (per-person tones) are not surfaced by this picker — see
+   the 1.2 commit message. */
 const SKIN_TONES = (DATA.meta && DATA.meta.skinTones) || [];
 const TONE_NAMES = {
   '1f3fb':'light skin tone', '1f3fc':'medium-light skin tone', '1f3fd':'medium skin tone',
@@ -471,7 +476,10 @@ function deriveTone(eu, t){ // the derivation rule from ROADMAP
 }
 /* [{tone,unified}] in SKIN_TONES order, or null if rec has neither field */
 function toneVariants(rec){
-  if(rec.sv) return SKIN_TONES.map(t=>rec.sv[t]?{tone:t,unified:rec.sv[t]}:null).filter(Boolean);
+  if(rec.sv) return SKIN_TONES.map(t=>{
+    const u = rec.sv[t] || rec.sv[t+'-'+t]; // single-base uniform key, else joined same-tone key
+    return u ? {tone:t,unified:u} : null;
+  }).filter(Boolean);
   if(rec.s) return SKIN_TONES.map(t=>({tone:t, unified:deriveTone(rec.eu,t)}));
   return null;
 }
