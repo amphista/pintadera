@@ -23,9 +23,9 @@ Shipped from `mobile-ux`: "Show glyph names on keys" setting (caption shows desc
 | Session | Work | Model |
 |---|---|---|
 | 1.1 | ~~**Skin-tone data rebuild**~~ — **done.** Encoding decided + `symbols-data.js` regenerated; see *Skin-tone encoding* below | **Opus 5** |
-| 1.2 | **Skin-tone selector UI** — picker on emoji keys that support modifiers; respects dual-nature text/emoji setting | **Sonnet 5** |
-| 1.3 | **Manual favorites** — star glyphs into a Favorites folder (localStorage, like Recent) | **Sonnet 5** |
-| 1.4 | **Dim all-tofu folders** — folders whose glyphs all fail the render check get dimmed on home | **Haiku 4.5** |
+| 1.2 | ~~**Skin-tone selector UI**~~ — **done.** `.tonebtn` corner picker; see *Key-corner affordances* below | **Sonnet 5** |
+| 1.3 | ~~**Manual favorites**~~ — **done.** `.favbtn` star + Favorites folder, mirrors Recent | **Sonnet 5** |
+| 1.4 | ~~**Dim all-tofu folders**~~ — **done** (run on Sonnet 5 per session request, not Haiku) | ~~Haiku 4.5~~ |
 
 ### Skin-tone encoding (decided in 1.1 — read before starting 1.2)
 
@@ -66,12 +66,60 @@ table costs 4× the hybrid for no extra information. The generator **throws** if
 supposedly-derivable emoji ever stops deriving, so an `emoji-datasource` bump fails the
 build loudly instead of shipping broken glyphs.
 
-Those 13 are the multi-person ones (couples, holding hands, handshake). The 5-tone picker
-1.2 is scoped for covers the `s: 1` majority; a 25-combination UI for the `sv` glyphs is a
-1.2 design call, and the data is there either way.
+Those 13 are the multi-person ones (couples, holding hands, handshake). **Update after 1.2
+shipped:** the picker covers all 13, not just the `s:1` majority — see below for how.
 
 > Note: the six hand glyphs that appear in both an emoji folder and Dingbats (☝ ⛹ ✊ ✋ ✌ ✍) carry the
 > same skin fields in both places, so the picker behaves consistently wherever it's opened.
+
+### `sv` uniform-tone lookup (a wrinkle found while building 1.2)
+
+The picker offers 5 uniform-tone swatches for every tone-capable glyph, including all 13
+`sv` ones — but the lookup key shape differs depending on the base sequence, and using the
+wrong one silently no-ops (badge shows, click does nothing, no error):
+
+- **6 glyphs** with a single-codepoint base (handshake, couplekiss, couple_with_heart, and
+  the three holding-hands emoji) key the uniform tone as one 5-hex code: `sv["1f3fd"]`.
+- **7 glyphs** whose base already has 2–3 modifier-base codepoints (people_holding_hands +
+  the six heart/kiss couples) have *no* single-hex keys at all — their uniform tone is the
+  joined same-tone key: `sv["1f3fd-1f3fd"]`.
+
+Try the single key first, fall back to the joined one:
+```js
+const u = rec.sv[t] || rec.sv[t+'-'+t];
+```
+The 20 two-*different*-tone combinations per `sv` glyph (per-person asymmetric tones) are
+out of scope for this picker — deliberate cut, not a gap. A future session wanting that
+would need a 2-axis UI, which the data already supports (`meta.skinTones` × itself, minus
+the diagonal already covered above).
+
+### Key-corner affordances (claimed real estate — read before adding another one)
+
+Symbol keys now carry up to four small controls layered on the four corners. Any future
+session adding another per-key affordance needs a fifth spot or has to double up on one of
+these — check before assuming a corner is free:
+
+| Corner | Control | Shown when |
+|---|---|---|
+| top-left | `.selmark` (export selection checkmark) | `state.selMode` only |
+| top-right | dual-nature dot (text/emoji legend) | glyph is `e:1` (dual-nature) |
+| bottom-left | `.favbtn` (favorite star, 1.3) | always (visible even in selMode) |
+| bottom-right | `.tonebtn` (skin-tone picker, 1.2) | `isAsEmoji(rec) && (rec.s||rec.sv)`; hidden in selMode |
+
+`setRoving()` carries both `.favbtn` and `.tonebtn` tabindex with the active key's roving
+focus. Both buttons `stopPropagation()` in `bindGrid()`'s delegated click handler so they
+never trigger click-to-copy or (for `.tonebtn`) selection toggling.
+
+### Folder-card dimming cache (1.4)
+
+`folderDimmed(f)` samples up to 24 items per folder (strided) and requires unanimous
+`isRenderable()` failure before dimming — checking all 946 Fancy Letters glyphs every time
+Home renders would be wasteful, and "all tofu except one straggler" is vanishingly rare in
+practice. Results cache in `DIM_CACHE` by folder id since the render check depends only on
+the device's fixed font stack, not the OS-preview dropdown — never recomputed on repeat
+Home visits. Applies to `SYM_FOLDERS`/`EMO_FOLDERS` only; synthetic cards (All Glyphs, Most
+Useful, Recent, Favorites, Emoji-the-category-of-categories) are excluded since a
+near-empty Favorites/Recent could misleadingly sample as "all tofu."
 
 ## Phase 2 — Stream Deck page → real builder
 
