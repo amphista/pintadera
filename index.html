@@ -203,6 +203,19 @@
   .toneswatch:hover{transform:scale(1.12)}
   .toneswatch:focus-visible{outline:2.5px solid var(--amber);outline-offset:2px}
 
+  /* manual favorites — a star toggle in the one corner still free on a symbol
+     key: top-left is the selmark (selMode only), top-right is the dual-nature
+     dot, bottom-right is the tone-picker button. Unlike the tone button, this
+     stays visible in selMode too — starring and selecting-for-export are
+     unrelated concerns, so hiding it there would just be an inconsistency. */
+  .key .favbtn{position:absolute;bottom:4px;left:4px;width:17px;height:17px;border:0;
+    background:none;padding:0;cursor:pointer;font-family:var(--sym);font-size:13px;line-height:1;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-faint);opacity:.65;
+    transition:transform .12s,opacity .12s,color .15s}
+  .key .favbtn:hover{transform:scale(1.2);opacity:1;color:var(--amber-soft)}
+  .key .favbtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px;opacity:1}
+  .key .favbtn[aria-pressed="true"]{color:var(--amber);opacity:1}
+
   /* folder key — name sits INSIDE the square tile and wraps (up to 2 lines) when long */
   .key.folder{justify-content:space-between;align-items:stretch;padding:9px 6px 7px;gap:4px;cursor:pointer}
   .key.folder .fg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-family:var(--sym);
@@ -551,6 +564,8 @@ const LS = {
   set names(v){ if(v) localStorage.setItem('sd_names','1'); else localStorage.removeItem('sd_names'); },
   get recent(){try{return JSON.parse(localStorage.getItem('sd_recent')||'[]');}catch(e){return [];}},
   set recent(a){localStorage.setItem('sd_recent',JSON.stringify(a));},
+  get favorites(){try{return JSON.parse(localStorage.getItem('sd_favorites')||'[]');}catch(e){return [];}},
+  set favorites(a){localStorage.setItem('sd_favorites',JSON.stringify(a));},
   get renderable(){return localStorage.getItem('sd_renderable');}, // 'on' | 'off' | null(=auto)
   set renderable(v){ if(v==null) localStorage.removeItem('sd_renderable'); else localStorage.setItem('sd_renderable',v); },
   get sel(){try{return JSON.parse(localStorage.getItem('sd_sel')||'[]');}catch(e){return [];}},
@@ -560,6 +575,9 @@ const state = {
   view:'home', catId:null, page:0, search:'',
   os: LS.os, psize: LS.psize, filter: LS.filter, dual: LS.dual, showNames: LS.names, recent: LS.recent, onlyRenderable:false, selMode:false,
   selected: new Map(),  // char -> rec
+  // manual favorites: a Set (not the plain array Recent uses) for O(1) membership
+  // checks in symKey(), which runs once per rendered key against a ~8,389-item INDEX
+  favorites: new Set(LS.favorites),
 };
 // restore selection
 LS.sel.forEach(c=>{ const r=CHARMAP.get(c); if(r) state.selected.set(c,r); });
@@ -728,6 +746,26 @@ function openTonePicker(rec, btn){
   const first=pop.querySelector('.toneswatch'); if(first) first.focus();
 }
 
+/* ============================== FAVORITES ==============================
+   Manual, user-curated star — unlike Recent (auto-updating history, capped,
+   most-recent-first), this is a plain on/off toggle: no cap, no reordering,
+   toggling off just removes the char. Keyed by character, exactly like
+   CHARMAP/Recent, so the same glyph shows starred consistently everywhere
+   symKey() renders it (category folder, Recent, search, All Glyphs, or
+   Favorites itself). */
+function toggleFavorite(c){
+  if(state.favorites.has(c)) state.favorites.delete(c); else state.favorites.add(c);
+  LS.favorites=[...state.favorites];
+}
+function favLabel(rec,on){ return `${on?'Remove':'Add'} ${rec.c} — ${rec.n} ${on?'from':'to'} Favorites`; }
+function setFavBtnState(btn,rec){
+  const on=state.favorites.has(rec.c);
+  btn.setAttribute('aria-pressed',String(on));
+  btn.setAttribute('aria-label',favLabel(rec,on));
+  btn.title=on?'Remove from Favorites':'Add to Favorites';
+  btn.textContent=on?'★':'☆';
+}
+
 /* ============================== KEY BUILDERS ============================== */
 function symKey(rec){
   const b=document.createElement('button');
@@ -744,6 +782,13 @@ function symKey(rec){
   // pins it always-visible. The U+ code still appears in the copy toast + hover tooltip.
   const cp=document.createElement('span'); cp.className='cp'; cp.textContent=rec.n; b.appendChild(cp);
   if(state.selected.has(rec.c)){ b.classList.add('selected'); b.setAttribute('aria-pressed','true'); }
+  // favorite star toggle — bottom-left corner (see .favbtn CSS for why). Appended
+  // after .cp so it stacks above the "show names" caption scrim, same trick the
+  // tone button below already relies on.
+  const fb=document.createElement('button');
+  fb.type='button'; fb.className='favbtn'; fb.tabIndex=-1;
+  b.appendChild(fb);
+  setFavBtnState(fb, rec);
   // skin-tone picker affordance — only while the glyph is actually showing as an
   // emoji right now (respects the text/emoji dual-nature setting), and only for
   // glyphs that actually carry tone data
@@ -776,10 +821,11 @@ function makeGrid(){
   g.addEventListener('keydown',gridKeys);
   return g;
 }
-// roving tabindex: a key's tone-picker button (if it has one) travels with it,
-// so Tab reaches "active key -> its tone button -> out of the grid"
+// roving tabindex: a key's tone-picker and favorite buttons (if present) travel
+// with it, so Tab reaches "active key -> its favorite/tone buttons -> out of the grid"
 function setRoving(b, on){
   b.tabIndex = on?0:-1;
+  const fb=b.querySelector(':scope > .favbtn'); if(fb) fb.tabIndex = on?0:-1;
   const tb=b.querySelector(':scope > .tonebtn'); if(tb) tb.tabIndex = on?0:-1;
 }
 function firstFocusable(g){ const b=g.querySelector('.key'); if(b) setRoving(b,true); }
@@ -810,6 +856,22 @@ function gridCols(g,keys){
 /* delegated activation for symbol keys */
 function bindGrid(g){
   g.addEventListener('click',e=>{
+    const fb=e.target.closest('.favbtn');
+    if(fb){
+      e.stopPropagation();
+      // deliberately NOT gated on state.selMode (unlike the tone button below) —
+      // starring and multi-select/export are unrelated concerns, so there's no
+      // reason to disable one while the other is active
+      const b=fb.closest('.key.sym'); const rec=b&&(b._rec||CHARMAP.get(b.dataset.c));
+      if(rec){
+        toggleFavorite(rec.c);
+        // inside the Favorites folder itself, unstarring must remove the key —
+        // everywhere else, updating this one button in place is enough
+        if(state.view==='cat' && state.catId==='favorites') render();
+        else setFavBtnState(fb, rec);
+      }
+      return;
+    }
     const tb=e.target.closest('.tonebtn');
     if(tb){
       e.stopPropagation();
@@ -829,12 +891,17 @@ function bindGrid(g){
 function getFolder(id){
   if(id==='useful') return USEFUL;
   if(id==='recent') return recentFolder();
+  if(id==='favorites') return favoritesFolder();
   if(id==='all') return allFolder();
   return SYM_FOLDERS.find(f=>f.id===id) || EMO_FOLDERS.find(f=>f.id===id);
 }
 function recentFolder(){
   const items=state.recent.map(c=>CHARMAP.get(c)).filter(Boolean);
   return {id:'recent', label:'Recent', glyph:'⟲', items};
+}
+function favoritesFolder(){
+  const items=[...state.favorites].map(c=>CHARMAP.get(c)).filter(Boolean);
+  return {id:'favorites', label:'Favorites', glyph:'♥', items};
 }
 let _allItems=null;
 function allFolder(){
@@ -946,6 +1013,7 @@ function renderHome(){
   const allN=(DATA.meta&&DATA.meta.total)||CHARMAP.size;
   g.appendChild(folderKey({id:'all',label:'All Glyphs',glyph:'∗',count:allN,sub:'everything'}, false, ()=>open('all')));
   g.appendChild(folderKey(Object.assign({sub:'top picks'},USEFUL), false, ()=>open('useful')));
+  if(state.favorites.size) g.appendChild(folderKey({id:'favorites',label:'Favorites',glyph:'♥',count:state.favorites.size,sub:'starred'}, false, ()=>open('favorites')));
   if(state.recent.length) g.appendChild(folderKey({id:'recent',label:'Recent',glyph:'⟲',count:state.recent.length,sub:'recently copied'}, false, ()=>open('recent')));
   SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id))));
   const emCount=EMO_FOLDERS.reduce((n,f)=>n+f.items.length,0);
@@ -976,7 +1044,7 @@ function renderCat(){
   const start=state.page*per, slice=items.slice(start,start+per);
   const g=makeGrid();
   slice.forEach(it=>{ // tag with THIS folder so export grouping matches where the glyph was picked
-    const rec = (f.id==='recent'||f.id==='all') ? it : Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
+    const rec = (f.id==='recent'||f.id==='all'||f.id==='favorites') ? it : Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
     g.appendChild(symKey(rec)); });
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
   if(pages>1) stage.appendChild(pager(pages,items.length));
