@@ -230,6 +230,10 @@
     -webkit-mask:var(--folder-ico) center/contain no-repeat;mask:var(--folder-ico) center/contain no-repeat}
   .key.folder.useful::before{background:var(--amber);opacity:.9}
   .key.folder.useful .fg{color:var(--amber)}
+  /* all-tofu folder — visually deprioritized but still fully clickable (a hint,
+     not a restriction); opacity dip matches the disabled-pager convention below */
+  .key.folder.dimmed{opacity:.5}
+  .key.folder.dimmed:hover{opacity:.7}
 
   /* filter chips + dual-nature legend */
   .filters{margin:12px 2px 2px}
@@ -803,12 +807,14 @@ function symKey(rec){
   }
   return b;
 }
-function folderKey(f, isEmoji, onOpen){
+function folderKey(f, isEmoji, onOpen, dimmed){
   const b=document.createElement('button');
-  b.className='key folder'+(isEmoji?' is-emoji':'')+(f.id==='useful'?' useful':'');
+  b.className='key folder'+(isEmoji?' is-emoji':'')+(f.id==='useful'?' useful':'')+(dimmed?' dimmed':'');
   b.type='button'; b.tabIndex=-1; b.setAttribute('role','gridcell');
   const count = f.count!=null ? f.count : (f.items?f.items.length:0);
-  b.setAttribute('aria-label', `Open ${f.label} folder, ${count} ${f.sub||'glyphs'}`);
+  let label = `Open ${f.label} folder, ${count} ${f.sub||'glyphs'}`;
+  if(dimmed) label += ' — may not display on this device';
+  b.setAttribute('aria-label', label);
   b.innerHTML=`<span class="cnt">${count}</span><span class="fg"></span><span class="lbl">${f.label}</span>`;
   b.querySelector('.fg').textContent=f.glyph;
   b.addEventListener('click',onOpen);
@@ -963,6 +969,35 @@ function deviceLacksCoverage(){
 }
 function setOnlyRenderable(on){ state.onlyRenderable=on; LS.renderable=on?'on':'off'; state.page=0;
   const cb=$('renderChk'); if(cb) cb.checked=on; render(); }
+/* ---- folder-level "all tofu" dimming (Home folder cards) ----
+   A real category folder (a Unicode block or emoji category — SYM_FOLDERS/EMO_FOLDERS)
+   can legitimately render as 100% tofu on some device/font combo. Checking every item
+   in a 900+-glyph folder just to decide dimming is wasteful, so — same idea as
+   deviceLacksCoverage's whole-INDEX sampling, just scoped to one folder and capped
+   small — we check a bounded, strided sample and require the WHOLE sample to fail.
+   A folder that's really "all tofu except one glyph" is vanishingly unlikely in
+   practice, so unanimity over a small sample is a good proxy for unanimity over the
+   whole folder. Synthetic folders (All Glyphs, Most Useful, Recent, Favorites, the
+   Emoji category-of-categories card) deliberately don't go through this: they mix
+   glyph types broadly enough that "all fail" is both unlikely and a poor signal, and
+   a tiny/near-empty Favorites or Recent could trivially misread as "all tofu".
+   Depends only on the device's native font stack (fixed for the session, not the
+   "preview OS" dropdown), so compute once per folder id and cache — never recompute
+   on every renderHome()/renderEmojiHome() call (e.g. navigating back to Home). */
+const DIM_CACHE=new Map();
+function folderDimmed(f){
+  if(!_cx) return false; // no canvas → fail open, same as isRenderable
+  if(DIM_CACHE.has(f.id)) return DIM_CACHE.get(f.id);
+  const items=f.items||[];
+  let dimmed=false;
+  if(items.length){
+    const cap=24, step=Math.max(1,Math.floor(items.length/cap));
+    dimmed=true;
+    for(let i=0;i<items.length;i+=step){ if(isRenderable(items[i])){ dimmed=false; break; } }
+  }
+  DIM_CACHE.set(f.id,dimmed);
+  return dimmed;
+}
 function passFilter(rec){
   if(state.onlyRenderable && !isRenderable(rec)) return false;
   switch(state.filter){
@@ -1015,7 +1050,7 @@ function renderHome(){
   g.appendChild(folderKey(Object.assign({sub:'top picks'},USEFUL), false, ()=>open('useful')));
   if(state.favorites.size) g.appendChild(folderKey({id:'favorites',label:'Favorites',glyph:'♥',count:state.favorites.size,sub:'starred'}, false, ()=>open('favorites')));
   if(state.recent.length) g.appendChild(folderKey({id:'recent',label:'Recent',glyph:'⟲',count:state.recent.length,sub:'recently copied'}, false, ()=>open('recent')));
-  SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id))));
+  SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id),folderDimmed(f))));
   const emCount=EMO_FOLDERS.reduce((n,f)=>n+f.items.length,0);
   g.appendChild(folderKey({id:'emoji',label:'Emoji',glyph:'😊',count:EMO_FOLDERS.length,sub:'sets'},true,()=>{state.view='emoji';state.page=0;render();}));
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
@@ -1023,7 +1058,7 @@ function renderHome(){
 function renderEmojiHome(){
   bar('Emoji', EMO_FOLDERS.length+' sets · color glyphs', ()=>{state.view='home';render();});
   const g=makeGrid();
-  EMO_FOLDERS.forEach(f=>g.appendChild(folderKey(f,true,()=>open(f.id))));
+  EMO_FOLDERS.forEach(f=>g.appendChild(folderKey(f,true,()=>open(f.id),folderDimmed(f))));
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
 }
 function renderCat(){
