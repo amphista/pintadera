@@ -86,6 +86,100 @@ function parseEmojiProps() {
   return { emoji, presentation };
 }
 
+/* ================================================================
+ * SKIN TONES
+ * ----------------------------------------------------------------
+ * emoji-datasource exposes `skin_variations` on 323 emoji (1,875
+ * entries, all in People & Body). Three encodings were sized
+ * against the 543.8 KB baseline payload:
+ *
+ *   (a) flag only, derive every variant client-side ...... +1.6 KB (est)
+ *   (b) full explicit variant table ..................... +66.7 KB (est)
+ *   (c) hybrid: flag where derivation is provably safe,
+ *       explicit table where it is not ............ +20.3 KB measured   <- chosen
+ *
+ * (a) is not safe. 310 of the 323 have exactly five single-tone
+ * variants and exactly one Emoji_Modifier_Base, always at codepoint
+ * index 0 -- those derive perfectly (verified 1,550/1,550). The other
+ * 13 are multi-person emoji with 25 per-person tone combinations, and
+ * derivation breaks on them in three different ways:
+ *   - 1F46B/1F46C/1F46D/1F48F/1F491/1F91D have ONE codepoint in the
+ *     base, but mixed-tone variants expand to a completely different
+ *     ZWJ sequence:
+ *       1F46B + 1F3FB-1F3FC -> 1F469-1F3FB-200D-1F91D-200D-1F468-1F3FC
+ *   - 1F9D1-200D-1F91D-200D-1F9D1 (people_holding_hands) has three
+ *     modifier bases but takes only two tones -- the interior 1F91D
+ *     is skipped
+ *   - the six heart/kiss couples need per-person positional insertion
+ * Faking those would emit non-RGI sequences that render as tofu or as
+ * two separate glyphs, so they ship as data.
+ *
+ * (b) is always correct but costs 4x (c) for zero extra information.
+ *
+ * EMITTED SHAPE -- both fields are additive; records with no skin
+ * variations keep their existing shape exactly:
+ *
+ *   s: 1   -> derivable. The five variants are, for each tone in
+ *             meta.skinTones:
+ *                cps  = eu.split('-')
+ *                rest = cps.slice(1)
+ *                if (rest[0] === 'fe0f') rest.shift()
+ *                variant = [cps[0], tone, ...rest].join('-')
+ *             (the modifier replaces the FE0F presentation selector)
+ *
+ *   sv: {key: unified}
+ *          -> explicit. 25 entries. The key is one tone ("1f3fb"), or
+ *             two joined by "-" ("1f3fb-1f3fc") for per-person tones.
+ *
+ * Consumers: if `sv` is present use it, else if `s` is set derive.
+ * A record never needs both, so there is no per-glyph fallback chain.
+ * ================================================================ */
+const SKIN_TONES = ['1f3fb', '1f3fc', '1f3fd', '1f3fe', '1f3ff'];
+
+// The one derivation rule, kept in sync with the comment above.
+function toneVariant(unified, tone) {
+  const cps = unified.split('-');
+  const rest = cps.slice(1);
+  if (rest[0] === 'fe0f') rest.shift(); // modifier replaces the presentation selector
+  return [cps[0], tone, ...rest].join('-');
+}
+
+/* Fields to merge into a record, or null for no skin variations.
+   Throws if a supposedly-derivable emoji stops deriving: a future
+   emoji-datasource bump should fail the build loudly rather than
+   silently emit broken sequences. */
+function skinFieldsFor(e) {
+  const sv = e.skin_variations;
+  if (!sv) return null;
+  const keys = Object.keys(sv);
+  if (!keys.length) return null;
+  const unified = e.unified.toLowerCase();
+
+  if (keys.some((k) => k.includes('-'))) {
+    // per-person tone combinations -> explicit table
+    const table = {};
+    for (const k of keys) table[k.toLowerCase()] = sv[k].unified.toLowerCase();
+    return { sv: table };
+  }
+
+  // single-tone only -> assert the position-0 rule reproduces every variant
+  if (keys.length !== SKIN_TONES.length) {
+    throw new Error(
+      `skin: ${e.short_name} has ${keys.length} single-tone variants, expected ${SKIN_TONES.length}`
+    );
+  }
+  for (const tone of SKIN_TONES) {
+    const got = toneVariant(unified, tone);
+    const want = (sv[tone.toUpperCase()] || {}).unified;
+    if (!want || got !== want.toLowerCase()) {
+      throw new Error(
+        `skin: derivation broke for ${e.short_name} (${unified}) tone ${tone}: got ${got}, want ${want}`
+      );
+    }
+  }
+  return { s: 1 };
+}
+
 /* ---------------- emoji-datasource ---------------- */
 function loadEmojiDatasource() {
   const arr = require('emoji-datasource/emoji.json');
@@ -106,6 +200,7 @@ function loadEmojiDatasource() {
       subcategory: e.subcategory,
       sort: e.sort_order,
       img: { apple: !!e.has_img_apple, google: !!e.has_img_google, twitter: !!e.has_img_twitter, facebook: !!e.has_img_facebook },
+      skin: skinFieldsFor(e),
     };
     list.push(rec);
     byKey.set(unified, rec);
@@ -277,7 +372,7 @@ function imageFor(cp) {
   const k1 = cpHex(cp);
   const rec = eds.byKey.get(k1) || eds.byKey.get(k1 + '-fe0f');
   if (!rec) return null;
-  return { unified: rec.unified, img: rec.img };
+  return { unified: rec.unified, img: rec.img, skin: rec.skin };
 }
 
 let added = 0;
@@ -299,6 +394,7 @@ for (const [cp, info] of ucd) {
   const item = { c: ch, n: info.name.toLowerCase(), u: cpHex(cp) };
   if (e) item.e = e;
   if (im) { item.eu = im.unified; } // emoji image key (unified)
+  if (im && im.skin) Object.assign(item, im.skin); // s:1 or sv:{...}
   folderItems[folder].push(item);
   added++;
 }
@@ -320,10 +416,14 @@ const edsByCat = {};
 for (const r of eds.list) (edsByCat[r.category] ||= []).push(r);
 for (const cf of EMOJI_CAT_FOLDER) {
   const recs = (edsByCat[cf.cat] || []).sort((a, b) => a.sort - b.sort);
-  const items = recs.map((r) => ({
-    c: r.char, n: r.name, u: r.unified, e: 2, eu: r.unified,
-    k: r.keywords.filter((k) => k !== r.short).slice(0, 6),
-  }));
+  const items = recs.map((r) => {
+    const it = {
+      c: r.char, n: r.name, u: r.unified, e: 2, eu: r.unified,
+      k: r.keywords.filter((k) => k !== r.short).slice(0, 6),
+    };
+    if (r.skin) Object.assign(it, r.skin);
+    return it;
+  });
   emojiFolders.push({ id: cf.id, label: cf.label, glyph: cf.glyph, emoji: true, items });
 }
 
@@ -349,6 +449,7 @@ const symbolFolders = FOLDERS.filter((f) => f.id !== 'useful').map((f) => ({
 const payload = {
   meta: {
     generated: 'build', // stamped by caller, not Date.now (kept deterministic)
+    skinTones: SKIN_TONES, // see SKIN TONES above for how to apply them
     counts: {},
   },
   useful: { id: 'useful', label: 'Most Useful', glyph: '★', items: usefulItems },
@@ -366,6 +467,15 @@ payload.meta.total = total + emojiTotal;
 payload.meta.symbolTotal = total;
 payload.meta.emojiTotal = emojiTotal;
 
+/* skin-tone coverage tally (report only) */
+let skinDerived = 0, skinTabled = 0, skinTabledEntries = 0;
+for (const f of [payload.useful, ...symbolFolders, ...emojiFolders]) {
+  for (const it of f.items) {
+    if (it.sv) { skinTabled++; skinTabledEntries += Object.keys(it.sv).length; }
+    else if (it.s) skinDerived++;
+  }
+}
+
 const json = JSON.stringify(payload);
 writeFileSync(join(__dirname, 'symbols-data.json'), json);
 writeFileSync(join(__dirname, 'symbols-data.js'), 'window.SD_DATA=' + json + ';\n');
@@ -376,7 +486,9 @@ console.log('symbol folders:', symbolFolders.length, '| emoji folders:', emojiFo
 console.log('symbol glyphs :', total);
 console.log('emoji glyphs  :', emojiTotal);
 console.log('GRAND TOTAL   :', payload.meta.total);
-console.log('json size     :', (json.length / 1024).toFixed(0), 'KB');
+console.log('json size     :', (Buffer.byteLength(json, 'utf8') / 1024).toFixed(1), 'KB'); // bytes on disk, not UTF-16 length
+console.log('skin derived  :', skinDerived, 'glyphs (s:1)');
+console.log('skin tabled   :', skinTabled, 'glyphs (sv:{}) /', skinTabledEntries, 'entries');
 console.log('--- per folder ---');
 for (const f of symbolFolders) console.log(String(f.items.length).padStart(5), f.id, '-', f.label);
 console.log('--- emoji ---');
