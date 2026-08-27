@@ -181,6 +181,28 @@
   .key.selected .selmark{background:var(--sel);border-color:var(--sel)}
   .key.selected .selmark::before{content:"✓"}
 
+  /* skin-tone picker affordance — a small always-visible corner badge (never
+     hover-only, so it works on touch); the conic gradient hints "more tones
+     live here" without needing extra copy. Bottom-right avoids the top-left
+     selmark and top-right dual-nature dot on the same key. */
+  .key .tonebtn{position:absolute;bottom:5px;right:5px;width:15px;height:15px;border-radius:50%;
+    border:1.5px solid rgba(0,0,0,.35);cursor:pointer;padding:0;
+    background:conic-gradient(from 200deg,#f6dece,#eec9a1,#d8a373,#a86d44,#61452c);
+    box-shadow:0 1px 2px rgba(0,0,0,.5);opacity:.88;transition:transform .12s,opacity .12s}
+  .key .tonebtn:hover{transform:scale(1.15);opacity:1}
+  .key .tonebtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px;opacity:1}
+  .key .tonebtn[aria-expanded="true"]{opacity:1;transform:scale(1.1)}
+  body.selmode .key .tonebtn{display:none}
+
+  /* floating skin-tone swatch row, positioned in JS via getBoundingClientRect */
+  .tonepop{position:absolute;z-index:45;display:flex;gap:7px;align-items:center;
+    background:linear-gradient(180deg,#181a21,#111218);border:1px solid var(--key-edge);border-radius:12px;
+    padding:9px;box-shadow:0 14px 36px rgba(0,0,0,.6)}
+  .toneswatch{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(0,0,0,.3);cursor:pointer;
+    background:var(--tone);padding:0;transition:transform .12s,box-shadow .12s}
+  .toneswatch:hover{transform:scale(1.12)}
+  .toneswatch:focus-visible{outline:2.5px solid var(--amber);outline-offset:2px}
+
   /* folder key — name sits INSIDE the square tile and wraps (up to 2 lines) when long */
   .key.folder{justify-content:space-between;align-items:stretch;padding:9px 6px 7px;gap:4px;cursor:pointer}
   .key.folder .fg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-family:var(--sym);
@@ -424,6 +446,42 @@ const SYM_FOLDERS = DATA.symbols;            // [{id,label,glyph,items}]
 const EMO_FOLDERS = DATA.emoji;
 const USEFUL = DATA.useful;
 
+/* ============================== SKIN TONES ==============================
+   Two record shapes, never both (see ROADMAP "Skin-tone encoding"):
+     rec.s===1        -> derive the 5 variants client-side from rec.eu
+     rec.sv[toneKey]  -> explicit 25-entry table for the 13 multi-person emoji
+   The SAME-tone entries in `sv` use a single 5-hex key (e.g. "1f3fd") — a
+   lone modifier after a multi-person base already applies uniformly to
+   everyone per the Unicode spec, so that's what the uniform 5-swatch picker
+   below reads. The 20 two-different-tone combinations (per-person tones)
+   are not surfaced by this picker — see the 1.2 commit message. */
+const SKIN_TONES = (DATA.meta && DATA.meta.skinTones) || [];
+const TONE_NAMES = {
+  '1f3fb':'light skin tone', '1f3fc':'medium-light skin tone', '1f3fd':'medium skin tone',
+  '1f3fe':'medium-dark skin tone', '1f3ff':'dark skin tone',
+};
+const TONE_COLORS = {
+  '1f3fb':'#f6dece', '1f3fc':'#eec9a1', '1f3fd':'#d8a373', '1f3fe':'#a86d44', '1f3ff':'#61452c',
+};
+function unifiedToChar(u){ return u.split('-').map(h=>String.fromCodePoint(parseInt(h,16))).join(''); }
+function deriveTone(eu, t){ // the derivation rule from ROADMAP
+  const cps=eu.split('-'), rest=cps.slice(1);
+  if(rest[0]==='fe0f') rest.shift(); // modifier replaces the presentation selector
+  return [cps[0], t, ...rest].join('-');
+}
+/* [{tone,unified}] in SKIN_TONES order, or null if rec has neither field */
+function toneVariants(rec){
+  if(rec.sv) return SKIN_TONES.map(t=>rec.sv[t]?{tone:t,unified:rec.sv[t]}:null).filter(Boolean);
+  if(rec.s) return SKIN_TONES.map(t=>({tone:t, unified:deriveTone(rec.eu,t)}));
+  return null;
+}
+/* synthetic record for one tone variant — enough fields for copy/flash/CHARMAP */
+function toneRec(baseRec, variant){
+  return { c:unifiedToChar(variant.unified), n:`${baseRec.n}: ${TONE_NAMES[variant.tone]}`,
+    u:variant.unified, e:2, eu:variant.unified,
+    folderId:baseRec.folderId, folderLabel:baseRec.folderLabel, order:baseRec.order };
+}
+
 // flat index + char map (with folder backrefs) for search & selection
 const INDEX = [];
 const CHARMAP = new Map();
@@ -441,6 +499,13 @@ function indexFolder(f, isEmoji){
 indexFolder(USEFUL,false);
 SYM_FOLDERS.forEach(f=>indexFolder(f,false));
 EMO_FOLDERS.forEach(f=>indexFolder(f,true));
+// register tone-variant characters into CHARMAP only (not INDEX), so a copied
+// variant resolves via CHARMAP.get() for the Recent folder without the variant
+// itself showing up in search or category browsing
+for(const rec of INDEX){
+  const variants=toneVariants(rec); if(!variants) continue;
+  for(const v of variants){ const vrec=toneRec(rec,v); if(!CHARMAP.has(vrec.c)) CHARMAP.set(vrec.c,vrec); }
+}
 
 /* search aliases — common names the official Unicode name misses */
 const ALIASES = {
@@ -506,13 +571,14 @@ const stage=$('stage'), crumbs=$('crumbs'), live=$('live');
 /* Decides, per glyph + chosen platform, whether to show a color emoji
    (image or emoji-font) or a line-art symbol — so the preview matches
    how the character really renders when pasted somewhere. */
+// true emoji (e:2) always render as emoji; dual-nature glyphs (e:1) honor the display setting
+function isAsEmoji(rec){ return rec.e===2 || (rec.e===1 && state.dual==='emoji'); }
 function glyphNode(rec, opts){
   opts = opts||{};
   const os = state.os;
   const span=document.createElement('span');
   span.className='gly';
-  // true emoji (e:2) always render as emoji; dual-nature glyphs (e:1) honor the display setting
-  const asEmoji = rec.e===2 || (rec.e===1 && state.dual==='emoji');
+  const asEmoji = isAsEmoji(rec);
   const emojiCapable = asEmoji && rec.eu;
   if(emojiCapable && IMAGE_OS[os]){
     const img=document.createElement('img');
@@ -585,6 +651,75 @@ function pushRecent(c){
   state.recent=arr; LS.recent=arr;
 }
 
+/* ============================== SKIN TONE PICKER ==============================
+   A small corner affordance on emoji-capable keys opens a floating row of 5
+   Fitzpatrick swatches. Picking one copies that variant through the same
+   toast + Recent flow as a normal copy — it never touches rec.c/rec.eu on
+   the key itself, so the key's own default click-to-copy is unaffected. */
+let tonePop=null, tonePopBtn=null;
+function copyTone(baseRec, variant){
+  const vrec=toneRec(baseRec, variant);
+  const done=()=>{ pushRecent(vrec.c); flash(vrec); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(vrec.c).then(done).catch(()=>fallbackCopy(vrec.c,done));
+  } else fallbackCopy(vrec.c,done);
+}
+function closeTonePicker(returnFocus){
+  if(!tonePop) return;
+  tonePop.remove();
+  document.removeEventListener('pointerdown', onTonePickerOutside, true);
+  if(tonePopBtn){ tonePopBtn.setAttribute('aria-expanded','false'); if(returnFocus) tonePopBtn.focus(); }
+  tonePop=null; tonePopBtn=null;
+}
+function onTonePickerOutside(e){
+  if(!tonePop) return;
+  if(tonePop.contains(e.target) || (tonePopBtn&&tonePopBtn.contains(e.target))) return;
+  closeTonePicker(false);
+}
+function toneKeys(e){
+  if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeTonePicker(true); return; }
+  const sws=[...tonePop.querySelectorAll('.toneswatch')];
+  const i=sws.indexOf(document.activeElement); if(i<0) return;
+  let n=-1;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') n=(i+1)%sws.length;
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') n=(i-1+sws.length)%sws.length;
+  else if(e.key==='Home') n=0; else if(e.key==='End') n=sws.length-1;
+  else return;
+  e.preventDefault(); e.stopPropagation(); sws[n].focus();
+}
+function positionTonePop(pop, btn){
+  const r=btn.getBoundingClientRect();
+  const pw=pop.offsetWidth, ph=pop.offsetHeight;
+  let left=r.left+window.scrollX+r.width/2-pw/2;
+  left=Math.max(8, Math.min(left, window.scrollX+document.documentElement.clientWidth-pw-8));
+  let top=r.bottom+window.scrollY+8;
+  if(top+ph > window.scrollY+window.innerHeight-8) top=r.top+window.scrollY-ph-8;
+  pop.style.left=left+'px'; pop.style.top=top+'px';
+}
+function openTonePicker(rec, btn){
+  if(tonePopBtn===btn){ closeTonePicker(true); return; } // clicking it again toggles closed
+  closeTonePicker(false);
+  const variants=toneVariants(rec); if(!variants||!variants.length) return;
+  const pop=document.createElement('div'); pop.className='tonepop'; pop.setAttribute('role','menu');
+  pop.setAttribute('aria-label', `Skin tone for ${rec.n}`);
+  variants.forEach(v=>{
+    const ch=unifiedToChar(v.unified);
+    const sw=document.createElement('button'); sw.type='button'; sw.className='toneswatch';
+    sw.setAttribute('role','menuitem'); sw.style.setProperty('--tone', TONE_COLORS[v.tone]);
+    sw.setAttribute('aria-label', `Copy ${ch} — ${rec.n}: ${TONE_NAMES[v.tone]}`);
+    sw.title=TONE_NAMES[v.tone];
+    sw.addEventListener('click', ev=>{ ev.stopPropagation(); copyTone(rec,v); closeTonePicker(true); });
+    pop.appendChild(sw);
+  });
+  pop.addEventListener('keydown', toneKeys);
+  document.body.appendChild(pop);
+  positionTonePop(pop, btn);
+  tonePop=pop; tonePopBtn=btn;
+  btn.setAttribute('aria-expanded','true');
+  document.addEventListener('pointerdown', onTonePickerOutside, true);
+  const first=pop.querySelector('.toneswatch'); if(first) first.focus();
+}
+
 /* ============================== KEY BUILDERS ============================== */
 function symKey(rec){
   const b=document.createElement('button');
@@ -601,6 +736,18 @@ function symKey(rec){
   // pins it always-visible. The U+ code still appears in the copy toast + hover tooltip.
   const cp=document.createElement('span'); cp.className='cp'; cp.textContent=rec.n; b.appendChild(cp);
   if(state.selected.has(rec.c)){ b.classList.add('selected'); b.setAttribute('aria-pressed','true'); }
+  // skin-tone picker affordance — only while the glyph is actually showing as an
+  // emoji right now (respects the text/emoji dual-nature setting), and only for
+  // glyphs that actually carry tone data
+  if(isAsEmoji(rec) && (rec.s||rec.sv)){
+    b.classList.add('has-tone');
+    const tb=document.createElement('button');
+    tb.type='button'; tb.className='tonebtn'; tb.tabIndex=-1;
+    tb.setAttribute('aria-haspopup','true'); tb.setAttribute('aria-expanded','false');
+    tb.setAttribute('aria-label', `Choose skin tone for ${rec.n}`);
+    tb.title='Skin tone…';
+    b.appendChild(tb);
+  }
   return b;
 }
 function folderKey(f, isEmoji, onOpen){
@@ -621,7 +768,13 @@ function makeGrid(){
   g.addEventListener('keydown',gridKeys);
   return g;
 }
-function firstFocusable(g){ const b=g.querySelector('.key'); if(b) b.tabIndex=0; }
+// roving tabindex: a key's tone-picker button (if it has one) travels with it,
+// so Tab reaches "active key -> its tone button -> out of the grid"
+function setRoving(b, on){
+  b.tabIndex = on?0:-1;
+  const tb=b.querySelector(':scope > .tonebtn'); if(tb) tb.tabIndex = on?0:-1;
+}
+function firstFocusable(g){ const b=g.querySelector('.key'); if(b) setRoving(b,true); }
 function gridKeys(e){
   const g=e.currentTarget;
   const keys=[...g.querySelectorAll('.key')];
@@ -637,7 +790,7 @@ function gridKeys(e){
   }
   e.preventDefault();
   if(n<0||n>=keys.length) return;
-  keys[i].tabIndex=-1; keys[n].tabIndex=0; keys[n].focus();
+  setRoving(keys[i],false); setRoving(keys[n],true); keys[n].focus();
 }
 function gridCols(g,keys){
   if(keys.length<2) return 1;
@@ -649,6 +802,14 @@ function gridCols(g,keys){
 /* delegated activation for symbol keys */
 function bindGrid(g){
   g.addEventListener('click',e=>{
+    const tb=e.target.closest('.tonebtn');
+    if(tb){
+      e.stopPropagation();
+      if(state.selMode) return; // tone picker is hidden/disabled in select mode
+      const b=tb.closest('.key.sym'); const rec=b&&(b._rec||CHARMAP.get(b.dataset.c));
+      if(rec) openTonePicker(rec, tb);
+      return;
+    }
     const b=e.target.closest('.key.sym'); if(!b) return;
     const rec=b._rec||CHARMAP.get(b.dataset.c); if(!rec) return;
     if(state.selMode){ toggleSelect(rec,b); }
@@ -764,6 +925,7 @@ function filterBar(){
   return wrap;
 }
 function render(){
+  closeTonePicker(false); // the grid is about to be rebuilt; don't leave a stale popover anchored to a removed key
   stage.innerHTML=''; setCrumbs();
   if(state.search.trim()){ renderSearch(state.search.trim()); return; }
   if(state.view==='home') return renderHome();
@@ -1079,7 +1241,7 @@ document.addEventListener('click',()=>{ if($('settingsPop').classList.contains('
 $('trayClear').addEventListener('click',()=>{ state.selected.clear(); persistSel(); updateTray(); render(); });
 $('trayCopy').addEventListener('click',()=>{ if(!state.selected.size) return; copyText([...state.selected.values()].map(copyValue).join(''), state.selected.size); });
 $('trayExport').addEventListener('click',goExport);
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.view==='export'){ state.view='home'; render(); } else if($('settingsPop').classList.contains('show')){openSettings(false); $('settingsBtn').focus();} else if(state.search){clearSearch(); $('search').focus();} }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(tonePop){ closeTonePicker(true); } else if(state.view==='export'){ state.view='home'; render(); } else if($('settingsPop').classList.contains('show')){openSettings(false); $('settingsBtn').focus();} else if(state.search){clearSearch(); $('search').focus();} }
   if(e.key==='/'&&document.activeElement!==$('search')&&!/input|textarea/i.test(document.activeElement.tagName)){ e.preventDefault(); $('search').focus(); } });
 
 // stat line
