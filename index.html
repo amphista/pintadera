@@ -128,6 +128,20 @@
   .pop .ctrl{flex-direction:column;align-items:stretch;gap:6px;background:none;border:0;padding:0}
   .pop .ctrl label{font-size:9.5px}
   .pop .ctrl select{width:100%;font-size:13px;padding:9px 8px;border-radius:9px}
+  /* global skin-tone control — a radiogroup of swatches (not a <select>) because
+     color is the whole point of the choice: reading "medium-dark skin tone" in
+     a dropdown list is far slower to scan than picking the matching circle,
+     and this app already has the swatch-circle pattern to lift (formerly
+     .toneswatch on the removed per-key popover, reused here as .toneopt). */
+  .tonerow{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .toneopt{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(0,0,0,.3);cursor:pointer;padding:0;
+    background:var(--tone,var(--bg-2));color:#1a1305;font-family:var(--mono);font-weight:700;font-size:12px;
+    display:flex;align-items:center;justify-content:center;outline:2px solid transparent;outline-offset:2px;
+    transition:transform .12s,outline-color .12s}
+  .toneopt.default{background:var(--bg-2);border-style:dashed;border-color:var(--ink-faint);color:var(--ink-dim)}
+  .toneopt:hover{transform:scale(1.12)}
+  .toneopt:focus-visible{outline-color:var(--amber)}
+  .toneopt[aria-checked="true"]{outline-color:var(--amber)}
   .tgl{display:inline-flex;align-items:center;gap:8px;background:var(--bg-1);border:1px solid var(--line);
     color:var(--ink-dim);border-radius:11px;padding:9px 13px;font-size:11px;letter-spacing:.06em;cursor:pointer;
     text-transform:uppercase;transition:border-color .15s,color .15s,background .15s;white-space:nowrap}
@@ -181,6 +195,21 @@
   .key.selected .selmark{background:var(--sel);border-color:var(--sel)}
   .key.selected .selmark::before{content:"✓"}
 
+  /* manual favorites — a star toggle in the bottom-left corner of a symbol
+     key: top-left is the selmark (selMode only), top-right is the dual-nature
+     dot. Bottom-right is unclaimed since the per-key skin-tone picker (1.2)
+     was replaced by a single global control in the settings popover — see
+     ROADMAP's corner-affordance table. This stays visible in selMode too —
+     starring and selecting-for-export are unrelated concerns, so hiding it
+     there would just be an inconsistency. */
+  .key .favbtn{position:absolute;bottom:4px;left:4px;width:17px;height:17px;border:0;
+    background:none;padding:0;cursor:pointer;font-family:var(--sym);font-size:13px;line-height:1;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-faint);opacity:.65;
+    transition:transform .12s,opacity .12s,color .15s}
+  .key .favbtn:hover{transform:scale(1.2);opacity:1;color:var(--amber-soft)}
+  .key .favbtn:focus-visible{outline:2px solid var(--amber);outline-offset:2px;opacity:1}
+  .key .favbtn[aria-pressed="true"]{color:var(--amber);opacity:1}
+
   /* folder key — name sits INSIDE the square tile and wraps (up to 2 lines) when long */
   .key.folder{justify-content:space-between;align-items:stretch;padding:9px 6px 7px;gap:4px;cursor:pointer}
   .key.folder .fg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-family:var(--sym);
@@ -195,6 +224,10 @@
     -webkit-mask:var(--folder-ico) center/contain no-repeat;mask:var(--folder-ico) center/contain no-repeat}
   .key.folder.useful::before{background:var(--amber);opacity:.9}
   .key.folder.useful .fg{color:var(--amber)}
+  /* all-tofu folder — visually deprioritized but still fully clickable (a hint,
+     not a restriction); opacity dip matches the disabled-pager convention below */
+  .key.folder.dimmed{opacity:.5}
+  .key.folder.dimmed:hover{opacity:.7}
 
   /* filter chips + dual-nature legend */
   .filters{margin:12px 2px 2px}
@@ -375,6 +408,10 @@
         </select>
       </div>
       <div class="ctrl">
+        <label id="toneLabel">Skin tone (preview &amp; copy)</label>
+        <div class="tonerow" id="toneRow" role="radiogroup" aria-labelledby="toneLabel"></div>
+      </div>
+      <div class="ctrl">
         <label for="psize">Glyphs per page</label>
         <select id="psize" aria-label="Symbols per page">
           <option value="30">30</option>
@@ -424,6 +461,50 @@ const SYM_FOLDERS = DATA.symbols;            // [{id,label,glyph,items}]
 const EMO_FOLDERS = DATA.emoji;
 const USEFUL = DATA.useful;
 
+/* ============================== SKIN TONES ==============================
+   Two record shapes, never both (see ROADMAP "Skin-tone encoding"):
+     rec.s===1        -> derive the 5 variants client-side from rec.eu
+     rec.sv[toneKey]  -> explicit 25-entry table for the 13 multi-person emoji
+   The uniform-tone entry in `sv` is keyed two different ways depending on
+   how many modifier bases the base sequence has: a single-codepoint-base
+   pair (e.g. handshake, 1f91d) uses one 5-hex key ("1f3fd"); a base that
+   already contains multiple modifier-base codepoints (e.g. people holding
+   hands, or any heart/kiss couple) has no single-hex keys at all — its
+   uniform tone is the joined same-tone key ("1f3fd-1f3fd") instead. The
+   5-swatch picker below tries the single key first and falls back to the
+   joined one, so it works for both shapes. The 20 two-*different*-tone
+   combinations (per-person tones) are not surfaced by this picker — see
+   the 1.2 commit message. */
+const SKIN_TONES = (DATA.meta && DATA.meta.skinTones) || [];
+const TONE_NAMES = {
+  '1f3fb':'light skin tone', '1f3fc':'medium-light skin tone', '1f3fd':'medium skin tone',
+  '1f3fe':'medium-dark skin tone', '1f3ff':'dark skin tone',
+};
+const TONE_COLORS = {
+  '1f3fb':'#f6dece', '1f3fc':'#eec9a1', '1f3fd':'#d8a373', '1f3fe':'#a86d44', '1f3ff':'#61452c',
+};
+function unifiedToChar(u){ return u.split('-').map(h=>String.fromCodePoint(parseInt(h,16))).join(''); }
+function deriveTone(eu, t){ // the derivation rule from ROADMAP
+  const cps=eu.split('-'), rest=cps.slice(1);
+  if(rest[0]==='fe0f') rest.shift(); // modifier replaces the presentation selector
+  return [cps[0], t, ...rest].join('-');
+}
+/* [{tone,unified}] in SKIN_TONES order, or null if rec has neither field */
+function toneVariants(rec){
+  if(rec.sv) return SKIN_TONES.map(t=>{
+    const u = rec.sv[t] || rec.sv[t+'-'+t]; // single-base uniform key, else joined same-tone key
+    return u ? {tone:t,unified:u} : null;
+  }).filter(Boolean);
+  if(rec.s) return SKIN_TONES.map(t=>({tone:t, unified:deriveTone(rec.eu,t)}));
+  return null;
+}
+/* synthetic record for one tone variant — enough fields for copy/flash/CHARMAP */
+function toneRec(baseRec, variant){
+  return { c:unifiedToChar(variant.unified), n:`${baseRec.n}: ${TONE_NAMES[variant.tone]}`,
+    u:variant.unified, e:2, eu:variant.unified,
+    folderId:baseRec.folderId, folderLabel:baseRec.folderLabel, order:baseRec.order };
+}
+
 // flat index + char map (with folder backrefs) for search & selection
 const INDEX = [];
 const CHARMAP = new Map();
@@ -441,6 +522,13 @@ function indexFolder(f, isEmoji){
 indexFolder(USEFUL,false);
 SYM_FOLDERS.forEach(f=>indexFolder(f,false));
 EMO_FOLDERS.forEach(f=>indexFolder(f,true));
+// register tone-variant characters into CHARMAP only (not INDEX), so a copied
+// variant resolves via CHARMAP.get() for the Recent folder without the variant
+// itself showing up in search or category browsing
+for(const rec of INDEX){
+  const variants=toneVariants(rec); if(!variants) continue;
+  for(const v of variants){ const vrec=toneRec(rec,v); if(!CHARMAP.has(vrec.c)) CHARMAP.set(vrec.c,vrec); }
+}
 
 /* search aliases — common names the official Unicode name misses */
 const ALIASES = {
@@ -474,10 +562,14 @@ const LS = {
   set filter(v){localStorage.setItem('sd_filter',v);},
   get dual(){return localStorage.getItem('sd_dual')||'text';},   // emoji-capable (e:1) glyphs: 'text' | 'emoji'
   set dual(v){localStorage.setItem('sd_dual',v);},
+  get skinTone(){return localStorage.getItem('sd_skinTone')||null;},  // one of SKIN_TONES, or null = no override
+  set skinTone(v){ if(v) localStorage.setItem('sd_skinTone',v); else localStorage.removeItem('sd_skinTone'); },
   get names(){return localStorage.getItem('sd_names')==='1';},   // show descriptive names on keys
   set names(v){ if(v) localStorage.setItem('sd_names','1'); else localStorage.removeItem('sd_names'); },
   get recent(){try{return JSON.parse(localStorage.getItem('sd_recent')||'[]');}catch(e){return [];}},
   set recent(a){localStorage.setItem('sd_recent',JSON.stringify(a));},
+  get favorites(){try{return JSON.parse(localStorage.getItem('sd_favorites')||'[]');}catch(e){return [];}},
+  set favorites(a){localStorage.setItem('sd_favorites',JSON.stringify(a));},
   get renderable(){return localStorage.getItem('sd_renderable');}, // 'on' | 'off' | null(=auto)
   set renderable(v){ if(v==null) localStorage.removeItem('sd_renderable'); else localStorage.setItem('sd_renderable',v); },
   get sel(){try{return JSON.parse(localStorage.getItem('sd_sel')||'[]');}catch(e){return [];}},
@@ -485,8 +577,13 @@ const LS = {
 };
 const state = {
   view:'home', catId:null, page:0, search:'',
-  os: LS.os, psize: LS.psize, filter: LS.filter, dual: LS.dual, showNames: LS.names, recent: LS.recent, onlyRenderable:false, selMode:false,
+  os: LS.os, psize: LS.psize, filter: LS.filter, dual: LS.dual,
+  skinTone: SKIN_TONES.includes(LS.skinTone) ? LS.skinTone : null,  // global preview/copy tone override, or null
+  showNames: LS.names, recent: LS.recent, onlyRenderable:false, selMode:false,
   selected: new Map(),  // char -> rec
+  // manual favorites: a Set (not the plain array Recent uses) for O(1) membership
+  // checks in symKey(), which runs once per rendered key against a ~8,389-item INDEX
+  favorites: new Set(LS.favorites),
 };
 // restore selection
 LS.sel.forEach(c=>{ const r=CHARMAP.get(c); if(r) state.selected.set(c,r); });
@@ -506,13 +603,15 @@ const stage=$('stage'), crumbs=$('crumbs'), live=$('live');
 /* Decides, per glyph + chosen platform, whether to show a color emoji
    (image or emoji-font) or a line-art symbol — so the preview matches
    how the character really renders when pasted somewhere. */
+// true emoji (e:2) always render as emoji; dual-nature glyphs (e:1) honor the display setting
+function isAsEmoji(rec){ return rec.e===2 || (rec.e===1 && state.dual==='emoji'); }
 function glyphNode(rec, opts){
   opts = opts||{};
+  rec = previewRec(rec); // show the active global tone override, if any applies to this glyph
   const os = state.os;
   const span=document.createElement('span');
   span.className='gly';
-  // true emoji (e:2) always render as emoji; dual-nature glyphs (e:1) honor the display setting
-  const asEmoji = rec.e===2 || (rec.e===1 && state.dual==='emoji');
+  const asEmoji = isAsEmoji(rec);
   const emojiCapable = asEmoji && rec.eu;
   if(emojiCapable && IMAGE_OS[os]){
     const img=document.createElement('img');
@@ -542,10 +641,11 @@ function emojiText(rec){
 let toastT;
 /* what actually lands on the clipboard: in emoji mode a dual-nature glyph (e:1)
    copies with VS16 so it pastes as a color emoji, matching the preview */
-function copyValue(rec){ return (rec.e===1 && state.dual==='emoji') ? emojiText(rec) : rec.c; }
+function copyValue(rec){ const pr=previewRec(rec); return (pr.e===1 && state.dual==='emoji') ? emojiText(pr) : pr.c; }
 function copy(rec){
+  const pr=previewRec(rec);
   const txt=copyValue(rec);
-  const done=()=>{ pushRecent(rec.c); flash(rec); };
+  const done=()=>{ pushRecent(pr.c); flash(pr); };
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
   } else fallbackCopy(txt,done);
@@ -585,30 +685,121 @@ function pushRecent(c){
   state.recent=arr; LS.recent=arr;
 }
 
+/* ============================== SKIN TONE PREVIEW ==============================
+   Replaces 1.2's per-key popover with a single global control (settings
+   popover): pick a tone once and every tone-capable emoji-capable glyph
+   shows and copies that variant until you change it back. previewRec() is
+   the one substitution point — route a base record through it wherever the
+   UI needs "what will actually be shown/copied right now" (glyphNode,
+   copyValue, and the aria-label/title/name shown on a key), and leave it out
+   wherever identity must stay pinned to the base glyph (favoriting, folder
+   tagging — see their call sites). */
+function previewRec(rec){
+  if(!state.skinTone || !isAsEmoji(rec)) return rec;
+  const variants=toneVariants(rec); if(!variants) return rec;
+  const v=variants.find(v=>v.tone===state.skinTone); if(!v) return rec;
+  return toneRec(rec, v);
+}
+/* Default (no override) + the 5 Fitzpatrick tones, in that order */
+const TONE_OPTIONS=[{tone:null}].concat(SKIN_TONES.map(t=>({tone:t})));
+function buildToneRow(){
+  const row=$('toneRow'); row.innerHTML='';
+  TONE_OPTIONS.forEach(opt=>{
+    const b=document.createElement('button'); b.type='button';
+    b.className='toneopt'+(opt.tone?'':' default');
+    b.setAttribute('role','radio');
+    const label = opt.tone ? TONE_NAMES[opt.tone] : 'Default — no tone override';
+    b.title=label; b.setAttribute('aria-label',label);
+    if(opt.tone) b.style.setProperty('--tone', TONE_COLORS[opt.tone]);
+    b.dataset.tone=opt.tone||'';
+    row.appendChild(b);
+  });
+  syncToneRow();
+}
+function syncToneRow(){
+  [...$('toneRow').querySelectorAll('.toneopt')].forEach(b=>{
+    const on = (b.dataset.tone||null)===state.skinTone;
+    b.setAttribute('aria-checked', String(on));
+    b.tabIndex = on?0:-1;
+    b.textContent = on?'✓':'';
+  });
+}
+function selectTone(tone){
+  state.skinTone=tone||null; LS.skinTone=state.skinTone;
+  syncToneRow(); render();
+}
+$('toneRow').addEventListener('click', e=>{
+  const b=e.target.closest('.toneopt'); if(!b) return;
+  selectTone(b.dataset.tone||null); b.focus();
+});
+$('toneRow').addEventListener('keydown', e=>{
+  const btns=[...$('toneRow').querySelectorAll('.toneopt')];
+  const i=btns.indexOf(document.activeElement); if(i<0) return;
+  let n=-1;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') n=(i+1)%btns.length;
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') n=(i-1+btns.length)%btns.length;
+  else if(e.key==='Home') n=0; else if(e.key==='End') n=btns.length-1;
+  else return;
+  e.preventDefault();
+  selectTone(btns[n].dataset.tone||null); btns[n].focus();
+});
+
+/* ============================== FAVORITES ==============================
+   Manual, user-curated star — unlike Recent (auto-updating history, capped,
+   most-recent-first), this is a plain on/off toggle: no cap, no reordering,
+   toggling off just removes the char. Keyed by character, exactly like
+   CHARMAP/Recent, so the same glyph shows starred consistently everywhere
+   symKey() renders it (category folder, Recent, search, All Glyphs, or
+   Favorites itself). */
+function toggleFavorite(c){
+  if(state.favorites.has(c)) state.favorites.delete(c); else state.favorites.add(c);
+  LS.favorites=[...state.favorites];
+}
+function favLabel(rec,on){ return `${on?'Remove':'Add'} ${rec.c} — ${rec.n} ${on?'from':'to'} Favorites`; }
+function setFavBtnState(btn,rec){
+  const on=state.favorites.has(rec.c);
+  btn.setAttribute('aria-pressed',String(on));
+  btn.setAttribute('aria-label',favLabel(rec,on));
+  btn.title=on?'Remove from Favorites':'Add to Favorites';
+  btn.textContent=on?'★':'☆';
+}
+
 /* ============================== KEY BUILDERS ============================== */
 function symKey(rec){
+  // pr is what will actually show/copy right now (the active global tone applied,
+  // if any); rec itself stays the base record for identity — dataset.c, selection
+  // membership and favoriting all key off the base character, not a tone variant
+  const pr=previewRec(rec);
   const b=document.createElement('button');
   b.className='key sym'+(rec.e===1?' dual':'');
   b.type='button'; b.dataset.c=rec.c; b.setAttribute('role','gridcell');
   b.tabIndex=-1;
-  b.setAttribute('aria-label', ariaLabel(rec));
-  b.title=titleName(rec); // native hover tooltip: descriptive Unicode name + code point
+  b.setAttribute('aria-label', ariaLabel(pr));
+  b.title=titleName(pr); // native hover tooltip: descriptive Unicode name + code point
   b._rec=rec; // the folder-tagged record this key was rendered from (used by copy/select)
   const sel=document.createElement('span'); sel.className='selmark'; sel.setAttribute('aria-hidden','true');
   b.appendChild(sel);
   b.appendChild(glyphNode(rec));
   // hover/focus caption shows the descriptive name; the "Show names on keys" setting
   // pins it always-visible. The U+ code still appears in the copy toast + hover tooltip.
-  const cp=document.createElement('span'); cp.className='cp'; cp.textContent=rec.n; b.appendChild(cp);
+  const cp=document.createElement('span'); cp.className='cp'; cp.textContent=pr.n; b.appendChild(cp);
   if(state.selected.has(rec.c)){ b.classList.add('selected'); b.setAttribute('aria-pressed','true'); }
+  // favorite star toggle — bottom-left corner (see .favbtn CSS for why). Appended
+  // after .cp so it stacks above the "show names" caption scrim.
+  const fb=document.createElement('button');
+  fb.type='button'; fb.className='favbtn'; fb.tabIndex=-1;
+  b.appendChild(fb);
+  setFavBtnState(fb, rec);
   return b;
 }
-function folderKey(f, isEmoji, onOpen){
+function folderKey(f, isEmoji, onOpen, dimmed){
   const b=document.createElement('button');
-  b.className='key folder'+(isEmoji?' is-emoji':'')+(f.id==='useful'?' useful':'');
+  b.className='key folder'+(isEmoji?' is-emoji':'')+(f.id==='useful'?' useful':'')+(dimmed?' dimmed':'');
   b.type='button'; b.tabIndex=-1; b.setAttribute('role','gridcell');
   const count = f.count!=null ? f.count : (f.items?f.items.length:0);
-  b.setAttribute('aria-label', `Open ${f.label} folder, ${count} ${f.sub||'glyphs'}`);
+  let label = `Open ${f.label} folder, ${count} ${f.sub||'glyphs'}`;
+  if(dimmed) label += ' — may not display on this device';
+  b.setAttribute('aria-label', label);
   b.innerHTML=`<span class="cnt">${count}</span><span class="fg"></span><span class="lbl">${f.label}</span>`;
   b.querySelector('.fg').textContent=f.glyph;
   b.addEventListener('click',onOpen);
@@ -621,7 +812,13 @@ function makeGrid(){
   g.addEventListener('keydown',gridKeys);
   return g;
 }
-function firstFocusable(g){ const b=g.querySelector('.key'); if(b) b.tabIndex=0; }
+// roving tabindex: a key's favorite button (if present) travels with it, so
+// Tab reaches "active key -> its favorite button -> out of the grid"
+function setRoving(b, on){
+  b.tabIndex = on?0:-1;
+  const fb=b.querySelector(':scope > .favbtn'); if(fb) fb.tabIndex = on?0:-1;
+}
+function firstFocusable(g){ const b=g.querySelector('.key'); if(b) setRoving(b,true); }
 function gridKeys(e){
   const g=e.currentTarget;
   const keys=[...g.querySelectorAll('.key')];
@@ -637,7 +834,7 @@ function gridKeys(e){
   }
   e.preventDefault();
   if(n<0||n>=keys.length) return;
-  keys[i].tabIndex=-1; keys[n].tabIndex=0; keys[n].focus();
+  setRoving(keys[i],false); setRoving(keys[n],true); keys[n].focus();
 }
 function gridCols(g,keys){
   if(keys.length<2) return 1;
@@ -649,6 +846,22 @@ function gridCols(g,keys){
 /* delegated activation for symbol keys */
 function bindGrid(g){
   g.addEventListener('click',e=>{
+    const fb=e.target.closest('.favbtn');
+    if(fb){
+      e.stopPropagation();
+      // deliberately NOT gated on state.selMode (unlike the tone button below) —
+      // starring and multi-select/export are unrelated concerns, so there's no
+      // reason to disable one while the other is active
+      const b=fb.closest('.key.sym'); const rec=b&&(b._rec||CHARMAP.get(b.dataset.c));
+      if(rec){
+        toggleFavorite(rec.c);
+        // inside the Favorites folder itself, unstarring must remove the key —
+        // everywhere else, updating this one button in place is enough
+        if(state.view==='cat' && state.catId==='favorites') render();
+        else setFavBtnState(fb, rec);
+      }
+      return;
+    }
     const b=e.target.closest('.key.sym'); if(!b) return;
     const rec=b._rec||CHARMAP.get(b.dataset.c); if(!rec) return;
     if(state.selMode){ toggleSelect(rec,b); }
@@ -660,12 +873,17 @@ function bindGrid(g){
 function getFolder(id){
   if(id==='useful') return USEFUL;
   if(id==='recent') return recentFolder();
+  if(id==='favorites') return favoritesFolder();
   if(id==='all') return allFolder();
   return SYM_FOLDERS.find(f=>f.id===id) || EMO_FOLDERS.find(f=>f.id===id);
 }
 function recentFolder(){
   const items=state.recent.map(c=>CHARMAP.get(c)).filter(Boolean);
   return {id:'recent', label:'Recent', glyph:'⟲', items};
+}
+function favoritesFolder(){
+  const items=[...state.favorites].map(c=>CHARMAP.get(c)).filter(Boolean);
+  return {id:'favorites', label:'Favorites', glyph:'♥', items};
 }
 let _allItems=null;
 function allFolder(){
@@ -727,6 +945,35 @@ function deviceLacksCoverage(){
 }
 function setOnlyRenderable(on){ state.onlyRenderable=on; LS.renderable=on?'on':'off'; state.page=0;
   const cb=$('renderChk'); if(cb) cb.checked=on; render(); }
+/* ---- folder-level "all tofu" dimming (Home folder cards) ----
+   A real category folder (a Unicode block or emoji category — SYM_FOLDERS/EMO_FOLDERS)
+   can legitimately render as 100% tofu on some device/font combo. Checking every item
+   in a 900+-glyph folder just to decide dimming is wasteful, so — same idea as
+   deviceLacksCoverage's whole-INDEX sampling, just scoped to one folder and capped
+   small — we check a bounded, strided sample and require the WHOLE sample to fail.
+   A folder that's really "all tofu except one glyph" is vanishingly unlikely in
+   practice, so unanimity over a small sample is a good proxy for unanimity over the
+   whole folder. Synthetic folders (All Glyphs, Most Useful, Recent, Favorites, the
+   Emoji category-of-categories card) deliberately don't go through this: they mix
+   glyph types broadly enough that "all fail" is both unlikely and a poor signal, and
+   a tiny/near-empty Favorites or Recent could trivially misread as "all tofu".
+   Depends only on the device's native font stack (fixed for the session, not the
+   "preview OS" dropdown), so compute once per folder id and cache — never recompute
+   on every renderHome()/renderEmojiHome() call (e.g. navigating back to Home). */
+const DIM_CACHE=new Map();
+function folderDimmed(f){
+  if(!_cx) return false; // no canvas → fail open, same as isRenderable
+  if(DIM_CACHE.has(f.id)) return DIM_CACHE.get(f.id);
+  const items=f.items||[];
+  let dimmed=false;
+  if(items.length){
+    const cap=24, step=Math.max(1,Math.floor(items.length/cap));
+    dimmed=true;
+    for(let i=0;i<items.length;i+=step){ if(isRenderable(items[i])){ dimmed=false; break; } }
+  }
+  DIM_CACHE.set(f.id,dimmed);
+  return dimmed;
+}
 function passFilter(rec){
   if(state.onlyRenderable && !isRenderable(rec)) return false;
   switch(state.filter){
@@ -776,8 +1023,9 @@ function renderHome(){
   const allN=(DATA.meta&&DATA.meta.total)||CHARMAP.size;
   g.appendChild(folderKey({id:'all',label:'All Glyphs',glyph:'∗',count:allN,sub:'everything'}, false, ()=>open('all')));
   g.appendChild(folderKey(Object.assign({sub:'top picks'},USEFUL), false, ()=>open('useful')));
+  if(state.favorites.size) g.appendChild(folderKey({id:'favorites',label:'Favorites',glyph:'♥',count:state.favorites.size,sub:'starred'}, false, ()=>open('favorites')));
   if(state.recent.length) g.appendChild(folderKey({id:'recent',label:'Recent',glyph:'⟲',count:state.recent.length,sub:'recently copied'}, false, ()=>open('recent')));
-  SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id))));
+  SYM_FOLDERS.forEach(f=>g.appendChild(folderKey(f,false,()=>open(f.id),folderDimmed(f))));
   const emCount=EMO_FOLDERS.reduce((n,f)=>n+f.items.length,0);
   g.appendChild(folderKey({id:'emoji',label:'Emoji',glyph:'😊',count:EMO_FOLDERS.length,sub:'sets'},true,()=>{state.view='emoji';state.page=0;render();}));
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
@@ -785,7 +1033,7 @@ function renderHome(){
 function renderEmojiHome(){
   bar('Emoji', EMO_FOLDERS.length+' sets · color glyphs', ()=>{state.view='home';render();});
   const g=makeGrid();
-  EMO_FOLDERS.forEach(f=>g.appendChild(folderKey(f,true,()=>open(f.id))));
+  EMO_FOLDERS.forEach(f=>g.appendChild(folderKey(f,true,()=>open(f.id),folderDimmed(f))));
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
 }
 function renderCat(){
@@ -806,7 +1054,7 @@ function renderCat(){
   const start=state.page*per, slice=items.slice(start,start+per);
   const g=makeGrid();
   slice.forEach(it=>{ // tag with THIS folder so export grouping matches where the glyph was picked
-    const rec = (f.id==='recent'||f.id==='all') ? it : Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
+    const rec = (f.id==='recent'||f.id==='all'||f.id==='favorites') ? it : Object.assign({}, it, {folderId:f.id, folderLabel:f.label, order:FORDER[f.id]});
     g.appendChild(symKey(rec)); });
   stage.appendChild(g); bindGrid(g); firstFocusable(g);
   if(pages>1) stage.appendChild(pager(pages,items.length));
@@ -911,9 +1159,20 @@ function setSelMode(on){
 }
 
 /* ============================== EXPORT ============================== */
+/* Selection itself always stores the base record (see symKey/toggleSelect) so
+   that toggling the global tone after selecting glyphs still updates them —
+   but the export/tray output is resolved through previewRec at read time, so
+   what gets exported/copied matches what the tray preview and key faces are
+   showing right now (toneRec already carries folderId/folderLabel/order
+   through from the base record, so grouping is unaffected). WYSIWYG chosen
+   over "always base" because the whole point of this control is seeing the
+   tone before it lands somewhere else — a Stream Deck profile that silently
+   reverted to the base glyph would be a worse surprise than one that matches
+   the preview the user just approved. */
 function selectedGrouped(){
   const groups=new Map(); // folderId -> {label, order, items:[]}
-  for(const rec of state.selected.values()){
+  for(const base of state.selected.values()){
+    const rec=previewRec(base);
     if(!groups.has(rec.folderId)) groups.set(rec.folderId,{label:rec.folderLabel,order:rec.order,items:[]});
     groups.get(rec.folderId).items.push(rec);
   }
@@ -1088,6 +1347,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.view==='
 
 // boot
 $('os').value=state.os; $('psize').value=String(state.psize); $('dualSel').value=state.dual;
+buildToneRow();
 $('namesChk').checked=state.showNames; document.body.classList.toggle('names',state.showNames);
 initDetect();
 { const savedR=LS.renderable; state.onlyRenderable = savedR!=null ? (savedR==='on') : deviceLacksCoverage(); }
